@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Gauge – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Add Inspection Gauge</h1>
+
+<div class="nav-bar">
+    <a href="/gauges" class="nav-btn nav-secondary">⬅ Back</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+<label>Category</label>
+<select name="category" required>
+    <option>DIM</option>
+    <option>THREAD</option>
+    <option>AIR</option>
+    <option>QUAL</option>
+    <option>WEAR</option>
+    <option>CUSTOM</option>
+</select>
+
+<label>Subtype</label>
+<input name="subtype" placeholder="Vernier Caliper / Micrometer" required>
+
+<label>Mechanism</label>
+<select name="mechanism">
+    <option>Analog</option>
+    <option>Digital</option>
+    <option>Dial</option>
+    <option>Lever</option>
+    <option>Plunger</option>
+    <option>Air</option>
+</select>
+
+<label>Range</label>
+<input name="range">
+
+<label>Least Count</label>
+<input name="least_count">
+
+<label>Make</label>
+<input name="make">
+
+<label>Serial No</label>
+<input name="serial_no">
+
+<label>Location</label>
+<input name="location">
+
+<label>Last Calibration Date</label>
+<input type="date" name="last_calibration">
+
+<label>Calibration Frequency (days)</label>
+<input type="number" name="calibration_freq" value="365">
+
+<label>Remarks</label>
+<input name="remarks">
+
+<button class="nav-btn nav-primary full-width">
+    Save Gauge
+</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

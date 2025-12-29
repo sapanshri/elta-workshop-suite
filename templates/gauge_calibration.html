@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gauge Calibration – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Gauge Calibration</h1>
+
+<div class="nav-bar">
+    <a href="/gauges" class="nav-btn nav-secondary">⬅ Back</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+<label>Calibration Date</label>
+<input type="date" name="calibration_date" value="{{ today }}" required>
+
+<label>Gauge</label>
+<select name="gauge_id" required>
+{% for g in gauges %}
+<option value="{{ g.id }}">
+    {{ g.gauge_code }} | {{ g.subtype }}
+</option>
+{% endfor %}
+</select>
+
+<label>Calibrated By</label>
+<input name="calibrated_by">
+
+<label>Result</label>
+<select name="result">
+    <option>PASS</option>
+    <option>FAIL</option>
+</select>
+
+<label>Certificate No</label>
+<input name="certificate_no">
+
+<label>Remarks</label>
+<input name="remarks">
+
+<button class="nav-btn nav-primary full-width">
+    Save Calibration
+</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

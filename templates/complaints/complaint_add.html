@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Complaint – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Add Customer Complaint</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/complaints" class="nav-btn nav-secondary">📋 Complaints</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+  <label>Complaint No (Auto)</label>
+  <input value="{{ complaint_no }}" disabled>
+
+  <label>Complaint Date</label>
+  <input type="date" name="complaint_date" value="{{ today }}" required>
+
+  <label>Customer</label>
+  <select name="customer_id" required>
+    <option value="">Select...</option>
+    {% for c in customers %}
+      <option value="{{ c.id }}">{{ c.customer_name }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Customer Ref No (optional)</label>
+  <input name="customer_ref_no" placeholder="Customer complaint ref / PO / Challan">
+
+  <hr>
+
+  <label>Item Code</label>
+  <select name="item_code" required>
+    <option value="">Select...</option>
+    {% for i in item_codes %}
+      <option value="{{ i.item_code }}">{{ i.item_code }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Batch No (optional)</label>
+  <input name="batch_no">
+
+  <label>Qty Affected</label>
+  <input type="number" name="qty_affected" min="0" value="0">
+
+  <hr>
+
+  <label>Issue Category</label>
+  <select name="issue_category" required>
+    {% for cat in categories %}
+      <option value="{{ cat }}">{{ cat }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Issue Description</label>
+  <textarea name="issue_description" rows="4" required></textarea>
+
+  <label>Severity</label>
+  <select name="severity" required>
+    {% for s in severities %}
+      <option value="{{ s }}" {% if s == "MED" %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+
+  <hr>
+
+  <label>Machine (optional)</label>
+  <select name="machine_code">
+    <option value="">-- None --</option>
+    {% for m in machines %}
+      <option value="{{ m.machine_code }}">{{ m.machine_code }} | {{ m.machine_name }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Job No (optional)</label>
+  <input name="job_no">
+
+  <label>Shift Date (optional)</label>
+  <input type="date" name="shift_date">
+
+  <label>Shift (optional)</label>
+  <select name="shift">
+    <option value="">--</option>
+    <option>A</option>
+    <option>B</option>
+    <option>C</option>
+  </select>
+
+  <hr>
+
+  <label>Assigned To (Owner)</label>
+  <input name="assigned_to" placeholder="Free text">
+
+  <label>Containment Action (Immediate)</label>
+  <textarea name="containment_action" rows="3"></textarea>
+
+  <button class="nav-btn nav-primary full-width">Save Complaint</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

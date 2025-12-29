@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Machine – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Edit Machine</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/machines/" class="nav-btn nav-secondary">🏭 Machine Master</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+    <label>PIN (required to save)</label>
+    <input name="pin" type="password" required>
+
+    <label>Machine Code</label>
+    <input name="machine_code" value="{{ row.machine_code }}" required>
+
+    <label>Machine Name</label>
+    <input name="machine_name" value="{{ row.machine_name }}" required>
+
+    <label>Machine Type</label>
+    <input name="machine_type" value="{{ row.machine_type }}" required>
+
+    <label>Controller</label>
+    <input name="controller" value="{{ row.controller or '' }}">
+
+    <label>Location</label>
+    <input name="location" value="{{ row.location or '' }}">
+
+    <label>Status</label>
+    <select name="status">
+        <option {% if row.status=='ACTIVE' %}selected{% endif %}>ACTIVE</option>
+        <option {% if row.status=='INACTIVE' %}selected{% endif %}>INACTIVE</option>
+        <option {% if row.status=='SCRAP' %}selected{% endif %}>SCRAP</option>
+    </select>
+
+    <label>Install Date</label>
+    <input type="date" name="install_date" value="{{ row.install_date or '' }}">
+
+    <label>Notes</label>
+    <input name="notes" value="{{ row.notes or '' }}">
+
+    <button class="nav-btn nav-primary full-width">Save Changes</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

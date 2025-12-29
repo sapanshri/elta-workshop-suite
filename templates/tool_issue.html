@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Issue Cutting Tool</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Issue Cutting Tool</h1>
+
+<form method="post" class="stacked-form">
+
+    <label>Issue Date</label>
+    <input type="date" name="issue_date" value="{{ today }}" required>
+
+    <label>Tool</label>
+    <select name="tool_id" required>
+        {% for t in tools %}
+        <option value="{{ t[0] }}">
+            {{ t[1] }} | {{ t[2] }} | Ø{{ t[3] }} × {{ t[4] }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" name="qty" min="1" required>
+
+    <label>Operator Name</label>
+    <input name="operator" required>
+
+    <label>Machine</label>
+    <select name="machine_code" required>
+        <option value="">-- Select Machine --</option>
+        {% for m in machines %}
+        <option value="{{ m.machine_code }}">
+            {{ m.machine_code }} | {{ m.machine_name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Shift</label>
+    <select name="shift" required>
+        <option>A</option>
+        <option>B</option>
+    </select>
+
+    <label>Job Name / Job No</label>
+    <input name="job_name">
+
+    <button class="primary full-width">Issue Tool</button>
+
+</form>
+
+<p style="margin-top:15px;">
+    <div class="nav-bar">
+       <a href="/" class="nav-link">🏠 Home</a>
+       <a href="/tools" class="nav-link">🔧 Tools</a>
+    </div>
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
+

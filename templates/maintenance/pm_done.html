@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PM Done – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Close PM</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/maintenance/pm" class="nav-btn nav-secondary">🧰 PM Dashboard</a>
+</div>
+
+<div style="margin-bottom:12px; color:#444;">
+  <b>Machine:</b> {{ row.machine_code }} <br>
+  <b>PM:</b> {{ row.pm_name }} <br>
+  <b>Frequency:</b> {{ row.frequency_days }} days <br>
+  <b>Current Due:</b> {{ row.next_due_date }} ({{ row.status }})
+</div>
+
+<form method="post" class="stacked-form">
+
+  <label>PIN (required)</label>
+  <input type="password" name="pin" required>
+
+  <label>Done Date</label>
+  <input type="date" name="done_date" value="{{ today }}" required>
+
+  <label>Done By</label>
+  <input name="done_by" placeholder="Name">
+
+  <label>Remarks</label>
+  <input name="remarks" placeholder="What was done / observations">
+
+  <button class="nav-btn nav-primary full-width">Mark Done</button>
+</form>
+
+</div>
+</div>
+</body>
+</html>
+

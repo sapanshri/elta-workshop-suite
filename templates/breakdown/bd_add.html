@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>New Breakdown – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>New Breakdown</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/breakdown/list" class="nav-btn nav-secondary">🧯 Breakdown List</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+  <label>Date</label>
+  <input type="date" name="breakdown_date" value="{{ today }}" required>
+
+  <label>Machine</label>
+  <select name="machine_code" required>
+    <option value="">-- Select Machine --</option>
+    {% for m in machines %}
+      <option value="{{ m.machine_code }}">{{ m.machine_code }} | {{ m.machine_name }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Start Time</label>
+  <input type="time" name="start_time" required>
+
+  <label>Problem</label>
+  <input name="problem" placeholder="What happened?" required>
+
+  <label>Handled By (optional)</label>
+  <input name="handled_by" placeholder="Technician/Operator/Vendor">
+
+  <button class="nav-btn nav-primary full-width">Save Breakdown</button>
+</form>
+
+</div>
+</div>
+</body>
+</html>
+

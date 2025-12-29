@@ -1,0 +1,5 @@
+ADMIN_PIN = "7091"   # default PIN
+ADMIN_PIN_1 = "7091"
+ADMIN_PIN_2 = "8588"
+
+

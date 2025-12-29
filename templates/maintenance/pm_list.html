@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Preventive Maintenance – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Preventive Maintenance (PM)</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/maintenance/pm/add" class="nav-btn nav-primary">➕ Add PM</a>
+</div>
+
+<div class="legend" style="margin:10px 0 12px;">
+  <span class="legend-ok">OK: {{ counts.ok or 0 }}</span>
+  <span class="legend-due">Due: {{ counts.due or 0 }}</span>
+  <span class="legend-overdue">Overdue: {{ counts.overdue or 0 }}</span>
+</div>
+
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+  <label>Machine</label>
+  <select name="machine_code">
+    <option value="">-- All --</option>
+    {% for m in machines %}
+      <option value="{{ m.machine_code }}"
+        {% if request.args.get('machine_code') == m.machine_code %}selected{% endif %}>
+        {{ m.machine_code }} | {{ m.machine_name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Status</label>
+  <select name="status">
+    <option value="">-- All --</option>
+    <option value="OK" {% if request.args.get('status')=='OK' %}selected{% endif %}>OK</option>
+    <option value="DUE" {% if request.args.get('status')=='DUE' %}selected{% endif %}>DUE</option>
+    <option value="OVERDUE" {% if request.args.get('status')=='OVERDUE' %}selected{% endif %}>OVERDUE</option>
+  </select>
+
+  <button class="nav-btn nav-primary full-width">Apply Filters</button>
+  <a class="nav-btn nav-neutral full-width" style="text-align:center;" href="/maintenance/pm">Clear Filters</a>
+</form>
+
+<table class="inventory-table">
+<thead>
+<tr>
+  <th>Machine</th>
+  <th>PM</th>
+  <th>Freq (days)</th>
+  <th>Last Done</th>
+  <th>Next Due</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr class="status-{{ r.status|lower }}">
+  <td><b>{{ r.machine_code }}</b><br><span style="color:#666; font-size:12px;">{{ r.machine_name or "" }}</span></td>
+  <td>{{ r.pm_name }}</td>
+  <td>{{ r.frequency_days }}</td>
+  <td>{{ r.last_done_date or "-" }}</td>
+  <td><b>{{ r.next_due_date }}</b></td>
+  <td><b>{{ r.status }}</b></td>
+  <td>
+    <a class="nav-btn nav-secondary" href="/maintenance/pm/done/{{ r.schedule_id }}">Done</a>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+</body>
+</html>
+

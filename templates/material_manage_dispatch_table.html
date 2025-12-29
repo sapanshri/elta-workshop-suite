@@ -1,0 +1,79 @@
+<table class="inventory-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Customer</th>
+      <th>Cust Challan</th>
+      <th>Cust Date</th>
+      <th>ELTA Challan</th>
+      <th>Dispatch Date</th>
+      <th>Code</th>
+      <th>Process</th>
+      <th>OK</th>
+      <th>Rej</th>
+      <th>C/D</th>
+      <th>N/D</th>
+      <th>N/D (PW)</th>
+      <th>Total</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r.customer_name }}</td>
+      <td><b>{{ r.customer_challan_no }}</b></td>
+      <td>{{ r.customer_challan_date }}</td>
+
+      <td>
+        <input name="elta_challan_no" value="{{ r.elta_challan_no }}" style="width:120px;" required>
+      </td>
+
+      <td>
+        <input type="date" name="dispatch_date" value="{{ r.dispatch_date }}" style="width:140px;" required>
+      </td>
+
+      <td>{{ r.item_code }}</td>
+      <td>{{ r.process }}</td>
+
+      <td><input type="number" name="ok_qty" value="{{ r.ok_qty }}" min="0" style="width:70px;"></td>
+      <td><input type="number" name="rej_qty" value="{{ r.rej_qty }}" min="0" style="width:70px;"></td>
+      <td><input type="number" name="cd_qty" value="{{ r.cd_qty }}" min="0" style="width:70px;"></td>
+      <td><input type="number" name="nd_qty" value="{{ r.nd_qty }}" min="0" style="width:70px;"></td>
+      <td><input type="number" name="nd_pw_qty" value="{{ r.nd_pw_qty }}" min="0" style="width:85px;"></td>
+
+      <td><b class="row-total">{{ r.total_qty }}</b></td>
+
+
+      <td style="white-space:nowrap;">
+        <button type="button" class="nav-btn nav-secondary"
+                onclick="saveDispatchRow(this, {{ r.id }})">
+          Save
+        </button>
+      </td>
+    </tr>
+  {% endfor %}
+
+  {% if rows|length == 0 %}
+    <tr><td colspan="15" style="color:#777;">No dispatch rows found.</td></tr>
+  {% endif %}
+  </tbody>
+</table>
+<script>
+document.querySelectorAll("tbody tr").forEach(tr => {
+  const inputs = ["ok_qty","rej_qty","cd_qty","nd_qty","nd_pw_qty"].map(n => tr.querySelector(`[name='${n}']`));
+  const totalEl = tr.querySelector(".row-total");
+  if(!totalEl) return;
+
+  function recalc(){
+    let t = 0;
+    inputs.forEach(i => t += parseInt(i.value || "0", 10));
+    totalEl.textContent = t;
+  }
+  inputs.forEach(i => i && i.addEventListener("input", recalc));
+  recalc();
+});
+</script>
+

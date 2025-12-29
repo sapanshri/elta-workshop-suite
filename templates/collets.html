@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Collet Inventory – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Collet Inventory</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/collets/issue" class="nav-btn nav-primary">➕ Issue Collet</a>
+    <a href="/collets/return" class="nav-btn nav-success">↩ Return Collet</a>
+    <a href="/collets/history" class="nav-btn nav-secondary">📜 History</a>
+</div>
+
+<form method="post" action="/collets/add" class="tool-form">
+    <input name="collet_type" placeholder="ER32 / ER20" required>
+    <input name="interface" placeholder="BT40 / HSK63">
+    <input name="size_range" placeholder="6–5 / 12–11">
+    <input name="location" placeholder="Location">
+    <input name="total_qty" placeholder="Qty" required>
+    <input name="reorder_level" value="2">
+    <input name="remarks" placeholder="Remarks">
+    <button class="primary">Add / Update</button>
+</form>
+
+<hr>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Type</th>
+    <th>Interface</th>
+    <th>Size Range</th>
+    <th>Location</th>
+    <th>Available</th>
+    <th>Reorder</th>
+</tr>
+</thead>
+
+<tbody>
+{% for c in collets %}
+<tr>
+    <td><strong>{{ c[1] }}</strong></td>
+    <td>{{ c[2] }}</td>
+    <td>{{ c[3] }}</td>
+    <td>{{ c[4] }}</td>
+
+    <td class="num">
+        {% if c[8] == 0 %}
+            <span class="stock-zero">0</span>
+        {% elif c[8] <= c[7] %}
+            <span class="stock-low">{{ c[8] }}</span>
+        {% else %}
+            <span class="stock-ok">{{ c[8] }}</span>
+        {% endif %}
+    </td>
+
+    <td class="num">{{ c[7] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

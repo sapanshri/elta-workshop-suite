@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Machine History Card – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Machine History Card</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/maintenance/pm" class="nav-btn nav-secondary">🧰 PM</a>
+  <a href="/breakdown/list" class="nav-btn nav-secondary">🧯 Breakdown</a>
+</div>
+
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+  <label>Status</label>
+  <select name="status">
+    <option value="ACTIVE" {% if request.args.get('status','ACTIVE')=='ACTIVE' %}selected{% endif %}>ACTIVE</option>
+    <option value="INACTIVE" {% if request.args.get('status')=='INACTIVE' %}selected{% endif %}>INACTIVE</option>
+    <option value="SCRAP" {% if request.args.get('status')=='SCRAP' %}selected{% endif %}>SCRAP</option>
+    <option value="" {% if request.args.get('status','')=='' and request.args %}selected{% endif %}>All</option>
+  </select>
+
+  <label>Machine Type</label>
+  <select name="machine_type">
+    <option value="">-- All --</option>
+    {% for t in types %}
+      <option value="{{ t.machine_type }}"
+        {% if request.args.get('machine_type')==t.machine_type %}selected{% endif %}>
+        {{ t.machine_type }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Search</label>
+  <input name="q" placeholder="Code / Name / Controller" value="{{ request.args.get('q','') }}">
+
+  <button class="nav-btn nav-primary full-width">Apply</button>
+  <a class="nav-btn nav-neutral full-width" style="text-align:center;" href="/machine-history/">Clear</a>
+</form>
+
+<table class="inventory-table">
+<thead>
+<tr>
+  <th>Machine</th>
+  <th>Type</th>
+  <th>Controller</th>
+  <th>Location</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for m in machines %}
+<tr>
+  <td><b>{{ m.machine_code }}</b><br><span style="color:#666; font-size:12px;">{{ m.machine_name }}</span></td>
+  <td>{{ m.machine_type }}</td>
+  <td>{{ m.controller or "-" }}</td>
+  <td>{{ m.location or "-" }}</td>
+  <td><b>{{ m.status }}</b></td>
+  <td>
+    <a class="nav-btn nav-secondary" href="/machine-history/{{ m.machine_code }}">View Card</a>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+</body>
+</html>
+

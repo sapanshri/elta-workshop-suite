@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Holder Inventory – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Holder Inventory</h1>
+
+<!-- ================= NAVIGATION ================= -->
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/holders/issue" class="nav-btn nav-primary">➕ Issue Holder</a>
+    <a href="/holders/return" class="nav-btn nav-success">↩ Return Holder</a>
+    <a href="/holders/history" class="nav-btn nav-secondary">📜 History</a>
+</div>
+
+<!-- ================= HOLDER ENTRY FORM ================= -->
+<form method="post" action="/holders/add" class="tool-form">
+  <input name="holder_type" placeholder="Holder Type" required>
+  <input name="interface" placeholder="BT40 / HSK63" required>
+  <input name="size" placeholder="ER32 / MT3">
+  <input name="projection" placeholder="Projection (mm)">
+  <input name="location" placeholder="Location">
+  <input name="total_qty" placeholder="Qty" required>
+  <input name="reorder_level" value="1">
+  <input name="remarks" placeholder="Remarks">
+  <button class="primary">Add / Update</button>
+</form>
+
+<hr>
+
+<!-- ================= INVENTORY TABLE ================= -->
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Holder Type</th>
+    <th>Interface</th>
+    <th>Size</th>
+    <th>Projection (mm)</th>
+    <th>Location</th>
+    <th>Available</th>
+    <th>Reorder</th>
+</tr>
+</thead>
+
+<tbody>
+{% for h in holders %}
+<tr>
+    <td><strong>{{ h[1] }}</strong></td>
+    <td>{{ h[2] }}</td>
+    <td>{{ h[3] }}</td>
+    <td class="num">{{ h[4] }}</td>
+    <td>{{ h[5] }}</td>
+
+    <td class="num">
+        {% if h[9] == 0 %}
+            <span class="stock-zero">0</span>
+        {% elif h[9] <= h[8] %}
+            <span class="stock-low">{{ h[9] }}</span>
+        {% else %}
+            <span class="stock-ok">{{ h[9] }}</span>
+        {% endif %}
+    </td>
+
+    <td class="num">{{ h[8] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

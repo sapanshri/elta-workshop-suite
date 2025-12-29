@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Material Dispatch – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Material Dispatch (Job Work / Product)</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/materials/inventory" class="nav-btn nav-secondary">📦 Inventory</a>
+</div>
+
+<form method="post" class="stacked-form" id="dispatchMainForm">
+
+  <!-- Work Type -->
+  <label>Work Type</label>
+  <select name="work_type" id="workType" required>
+    <option value="">Select...</option>
+    <option value="JOBWORK">Job Work</option>
+    <option value="PRODUCT">Product</option>
+  </select>
+
+  <!-- JOBWORK: Customer Challan -->
+  <div id="jobworkBlock" style="display:none;">
+    <label>Customer Challan</label>
+    <select id="challanSelect">
+      <option value="">Select challan...</option>
+      {% for ch in challans %}
+        <option value="{{ ch.challan_id }}">
+          {{ ch.customer_name }} | {{ ch.customer_challan_no }} | {{ ch.customer_challan_date }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- PRODUCT: Item master select (optional for usability; items actually loaded from stock endpoint) -->
+  <div id="productBlock" style="display:none;">
+    <label>Item Code (Product)</label>
+    <select id="productItemMaster">
+      <option value="">Select item...</option>
+      {% for it in item_codes %}
+        <option value="{{ it.item_code }}">{{ it.item_code }}</option>
+      {% endfor %}
+    </select>
+    <div style="color:#777; font-size:12px; margin-top:6px;">
+      Only items with available stock will be selectable in the next dropdown.
+    </div>
+  </div>
+
+  <!-- Item selector (posts inward_id to server for BOTH jobwork & product) -->
+  <label>Item Code</label>
+  <select name="inward_id" id="itemSelect" required disabled>
+    <option value="">Select Work Type first...</option>
+  </select>
+
+  <!-- read-only meta -->
+  <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:220px;">
+      <label>Process</label>
+      <input id="processBox" value="" readonly>
+    </div>
+    <div style="width:220px;">
+      <label>Balance</label>
+      <input id="balanceBox" value="" readonly>
+    </div>
+  </div>
+
+  <label>ELTA Challan No</label>
+  <input name="elta_challan_no" required>
+
+  <label>Dispatch Date</label>
+  <input type="date" name="dispatch_date" value="{{ today }}" required>
+
+  <hr>
+
+  <h3>Dispatch Quantities</h3>
+
+  <div class="table-scroll">
+    <table class="inventory-table">
+      <thead>
+        <tr>
+          <th style="width:120px;">OK</th>
+          <th style="width:120px;">Reject</th>
+          <th style="width:120px;">C/D</th>
+          <th style="width:120px;">N/D</th>
+          <th style="width:140px;">N/D (PW)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="number" name="ok_qty" value="0" min="0"></td>
+          <td><input type="number" name="rej_qty" value="0" min="0"></td>
+          <td><input type="number" name="cd_qty" value="0" min="0"></td>
+          <td><input type="number" name="nd_qty" value="0" min="0"></td>
+          <td><input type="number" name="nd_pw_qty" value="0" min="0"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <button class="nav-btn nav-primary full-width">Dispatch Material</button>
+  </div>
+
+</form>
+
+</div>
+</div>
+
+<script>
+let itemMap = {}; // inward_id -> {item_code, process, available_qty}
+let productStockRows = []; // cached from /dispatch/product-items
+
+function resetItemSelect(message){
+  const itemSelect = document.getElementById("itemSelect");
+  itemSelect.innerHTML = `<option value="">${message}</option>`;
+  itemSelect.disabled = true;
+  itemMap = {};
+  document.getElementById("processBox").value = "";
+  document.getElementById("balanceBox").value = "";
+}
+
+async function loadItemsForChallan(challanId){
+  resetItemSelect("Loading items...");
+  const res = await fetch(`/materials/dispatch/items/${challanId}`);
+  if(!res.ok){
+    resetItemSelect("Error loading items");
+    return;
+  }
+  const rows = await res.json();
+  fillItemSelectFromRows(rows);
+}
+
+async function loadProductStock(){
+  const res = await fetch(`/materials/dispatch/product-items`);
+  if(!res.ok){
+    productStockRows = [];
+    return;
+  }
+  productStockRows = await res.json();
+}
+
+function fillItemSelectFromRows(rows){
+  const itemSelect = document.getElementById("itemSelect");
+  if(!rows || rows.length === 0){
+    resetItemSelect("No balance items found");
+    return;
+  }
+
+  let html = `<option value="">Select item...</option>`;
+  itemMap = {};
+  rows.forEach(r => {
+    const inwardId = String(r.inward_id);
+    itemMap[inwardId] = {
+      item_code: r.item_code,
+      process: r.process || "",
+      available_qty: r.available_qty || 0
+    };
+    html += `<option value="${inwardId}">${r.item_code} | ${r.process || "-"} | Bal: ${r.available_qty}</option>`;
+  });
+
+  itemSelect.innerHTML = html;
+  itemSelect.disabled = false;
+}
+
+function filterProductRowsByItemCode(itemCode){
+  if(!itemCode) return productStockRows;
+  return productStockRows.filter(r => String(r.item_code) === String(itemCode));
+}
+
+/* UI Toggle */
+document.getElementById("workType").addEventListener("change", async (e) => {
+  const wt = e.target.value;
+
+  const jobworkBlock = document.getElementById("jobworkBlock");
+  const productBlock = document.getElementById("productBlock");
+
+  if(wt === "JOBWORK"){
+    jobworkBlock.style.display = "block";
+    productBlock.style.display = "none";
+    resetItemSelect("Select challan first...");
+    document.getElementById("challanSelect").value = "";
+    document.getElementById("productItemMaster").value = "";
+  }
+  else if(wt === "PRODUCT"){
+    jobworkBlock.style.display = "none";
+    productBlock.style.display = "block";
+    resetItemSelect("Loading stock items...");
+    document.getElementById("challanSelect").value = "";
+    await loadProductStock();
+    // show ALL stock items initially
+    fillItemSelectFromRows(productStockRows);
+  }
+  else {
+    jobworkBlock.style.display = "none";
+    productBlock.style.display = "none";
+    resetItemSelect("Select Work Type first...");
+  }
+});
+
+/* Jobwork challan change */
+document.getElementById("challanSelect").addEventListener("change", (e) => {
+  const challanId = e.target.value;
+  if(!challanId){
+    resetItemSelect("Select challan first...");
+    return;
+  }
+  loadItemsForChallan(challanId);
+});
+
+/* Product master item code filter (optional UX) */
+document.getElementById("productItemMaster").addEventListener("change", async (e) => {
+  const itemCode = e.target.value;
+  if(productStockRows.length === 0){
+    await loadProductStock();
+  }
+  const filtered = filterProductRowsByItemCode(itemCode);
+  fillItemSelectFromRows(filtered);
+});
+
+/* Item selection -> fill meta */
+document.getElementById("itemSelect").addEventListener("change", (e) => {
+  const inwardId = e.target.value;
+  const meta = itemMap[String(inwardId)];
+  document.getElementById("processBox").value = meta ? meta.process : "";
+  document.getElementById("balanceBox").value = meta ? meta.available_qty : "";
+});
+
+/* On submit: enforce challan selected if JOBWORK */
+document.getElementById("dispatchMainForm").addEventListener("submit", (e) => {
+  const wt = document.getElementById("workType").value;
+  if(wt === "JOBWORK"){
+    const challanId = document.getElementById("challanSelect").value;
+    if(!challanId){
+      e.preventDefault();
+      alert("Please select Customer Challan for Job Work.");
+      return;
+    }
+  }
+});
+</script>
+
+</body>
+</html>
+

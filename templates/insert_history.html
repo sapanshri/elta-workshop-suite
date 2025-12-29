@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Insert History – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Insert Usage History</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/inserts" class="nav-btn nav-secondary">🔹 Inserts</a>
+</div>
+
+<table class="inventory-table">
+
+<thead>
+<tr>
+    <th>Date</th>
+    <th>Insert</th>
+    <th>Action</th>
+    <th>Qty</th>
+    <th>Edges Used</th>
+    <th>Operator</th>
+    <th>Machine</th>
+    <th>Job</th>
+    <th>Shift</th>
+</tr>
+</thead>
+
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r[10] }}</td>
+    <td>{{ r[0] }} {{ r[1] }} {{ r[2] }}</td>
+    <td><strong>{{ r[3] }}</strong></td>
+    <td class="num">{{ r[4] if r[4] else "-" }}</td>
+    <td class="num">{{ r[5] if r[5] else "-" }}</td>
+    <td>{{ r[6] }}</td>
+    <td>{{ r[7] }}</td>
+    <td>{{ r[8] }}</td>
+    <td>{{ r[9] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

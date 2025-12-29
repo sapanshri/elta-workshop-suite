@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tool Regrind</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Regrind & Return Tool</h1>
+
+<form method="post" class="stacked-form">
+
+    <label>Tool</label>
+    <select name="tool_id" required>
+        {% for t in tools %}
+        <option value="{{ t[0] }}">
+            {{ t[1] }} {{ t[2] }} Ø{{ t[3] }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" name="qty" min="1" required>
+
+    <label>Operator / Incharge</label>
+    <input name="operator" required>
+
+    <label>Remarks</label>
+    <input name="remarks">
+
+    <button class="primary full-width">Mark Regrind Complete</button>
+
+</form>
+
+<p style="margin-top:15px;">
+    <div class="nav-bar">
+       <a href="/" class="nav-link">🏠 Home</a>
+       <a href="/tools" class="nav-link">🔧 Tools</a>
+    </div>
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
+

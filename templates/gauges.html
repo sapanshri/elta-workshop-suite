@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gauges – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Inspection Instruments & Gauges</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/gauges/add" class="nav-btn nav-primary">➕ Add Gauge</a>
+    <a href="/gauges/issue" class="nav-btn nav-secondary">📤 Issue</a>
+    <a href="/gauges/return" class="nav-btn nav-secondary">📥 Return</a>
+    <a href="/gauges/calibrate" class="nav-btn nav-secondary">🧪 Calibration</a>
+    <a href="/gauges/history" class="nav-btn nav-secondary">📜 History</a>
+</div>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Code</th>
+    <th>Type</th>
+    <th>Mechanism</th>
+    <th>Range</th>
+    <th>Location</th>
+    <th>Status</th>
+    <th>Next Calibration</th>
+</tr>
+</thead>
+<tbody>
+{% for g in gauges %}
+<tr class="status-{{ g.status|lower }}">
+    <td>{{ g.gauge_code }}</td>
+    <td>{{ g.subtype }}</td>
+    <td>{{ g.mechanism }}</td>
+    <td>{{ g.range }}</td>
+    <td>{{ g.location }}</td>
+    <td><b>{{ g.status }}</b></td>
+    {% set is_due_this_month = false %}
+
+    {% if g.next_calibration and today is defined %}
+    {% if g.next_calibration[:7] == today.isoformat()[:7]
+          and g.status != 'OVERDUE' %}
+        {% set is_due_this_month = true %}
+    {% endif %}
+{% endif %}
+
+<td class="{% if is_due_this_month %}cal-due-soon{% endif %}">
+    {% if g.next_calibration %}
+    {{ g.next_calibration[8:10] }}-{{ g.next_calibration[5:7] }}-{{ g.next_calibration[0:4] }}
+{% else %}
+    -
+{% endif %}
+
+</td>
+
+
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<div class="status-legend">
+    <span class="legend-item legend-ok">OK</span>
+    <span class="legend-item legend-due">DUE</span>
+    <span class="legend-item legend-overdue">OVERDUE</span>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>
+

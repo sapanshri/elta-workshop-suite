@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shift Reports</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Shift Production Reports</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/shift/add" class="nav-btn nav-primary">➕ New Shift</a>
+</div>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Date</th>
+    <th>Shift</th>
+    <th>Shift Incharge</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody>
+
+{% for r in rows %}
+<tr>
+    <td>{{ r.shift_date }}</td>
+    <td>{{ r.shift }}</td>
+    <td>{{ r.shift_incharge }}</td>
+    <td>
+       
+    <a href="{{ url_for('shift.shift_detail', shift_id=r.id) }}"
+       class="nav-btn nav-secondary">
+        View
+    </a>
+
+
+    </td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

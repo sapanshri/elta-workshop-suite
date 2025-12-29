@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Return Holder – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Return Holder</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/holders" class="nav-btn nav-secondary">🧲 Holders</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+    <label>Return Date</label>
+    <input type="date" name="return_date" value="{{ today }}" required>
+
+    <label>Holder</label>
+    <select name="holder_id" required>
+        {% for h in holders %}
+        <option value="{{ h[0] }}">
+            {{ h[1] }} | {{ h[2] }} | {{ h[3] }} | {{ h[4] }}mm
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" name="qty" min="1" required>
+
+    <label>Operator</label>
+    <input name="operator">
+
+    <label>Shift</label>
+    <select name="shift">
+        <option>A</option>
+        <option>B</option>
+       
+    </select>
+
+    <label>Remarks</label>
+    <input name="remarks">
+
+    <button class="nav-btn nav-success full-width">Return Holder</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

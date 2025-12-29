@@ -1,0 +1,28 @@
+<h2>Tool Availability</h2>
+
+<table>
+<tr>
+  <th>Tool</th>
+  <th>Shank</th>
+  <th>Material</th>
+  <th>Available</th>
+</tr>
+
+{% for r in results %}
+<tr>
+  <td>{{ r[1] }} Ø{{ r[3] }} × {{ r[4] }}</td>
+  <td>{{ r[6] }} Ø{{ r[7] }}</td>
+  <td>{{ r[8] }}</td>
+  <td>
+    {% if r[11] > 0 %}
+      ✅ {{ r[11] }} Available
+    {% else %}
+      ❌ Not Available
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+</table>
+
+<a href="/tools/">⬅ Back</a>
+

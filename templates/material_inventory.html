@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Material Inventory – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Material Inventory</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/materials/inward" class="nav-btn nav-primary">➕ Inward</a>
+    <a href="/materials/dispatch" class="nav-btn nav-secondary">📤 Dispatch</a>
+</div>
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+
+<label>Customer</label>
+<select name="customer_id">
+    <option value="">-- All --</option>
+    {% for c in customers %}
+    <option value="{{ c.id }}"
+        {% if request.args.get('customer_id') == c.id|string %}selected{% endif %}>
+        {{ c.customer_name }}
+    </option>
+    {% endfor %}
+</select>
+
+<label>Item Code</label>
+<select name="item_code">
+    <option value="">-- All --</option>
+    {% for i in item_codes %}
+    <option value="{{ i.item_code }}"
+        {% if request.args.get('item_code') == i.item_code %}selected{% endif %}>
+        {{ i.item_code }}
+    </option>
+    {% endfor %}
+</select>
+
+<label>Status</label>
+<select name="status">
+    <option value="">-- All --</option>
+    <option value="OPEN"
+        {% if request.args.get('status') == 'OPEN' %}selected{% endif %}>
+        OPEN
+    </option>
+    <option value="CLOSED"
+        {% if request.args.get('status') == 'CLOSED' %}selected{% endif %}>
+        CLOSED
+    </option>
+</select>
+
+<div id="closed-date-filters">
+
+    <label>ELTA Dispatch Date From</label>
+    <input type="date" name="from_date"
+           value="{{ request.args.get('from_date','') }}">
+
+    <label>ELTA Dispatch Date To</label>
+    <input type="date" name="to_date"
+           value="{{ request.args.get('to_date','') }}">
+
+</div>
+
+
+<div style="display:flex; gap:10px; margin-top:10px;">
+    <button class="nav-btn nav-primary full-width">
+        Apply Filters
+    </button>
+
+    <a href="/materials/inventory"
+       class="nav-btn nav-secondary full-width"
+       style="text-align:center;">
+        Clear Filters
+    </a>
+</div>
+
+</form>
+<form method="get" action="/materials/inventory/pdf"
+      style="margin-bottom:15px;">
+
+    <!-- Pass current filters to PDF -->
+    <input type="hidden" name="customer_id"
+           value="{{ request.args.get('customer_id','') }}">
+
+    <input type="hidden" name="item_code"
+           value="{{ request.args.get('item_code','') }}">
+
+    <input type="hidden" name="status"
+           value="{{ request.args.get('status','') }}">
+
+    <input type="hidden" name="from_date"
+           value="{{ request.args.get('from_date','') }}">
+
+    <input type="hidden" name="to_date"
+           value="{{ request.args.get('to_date','') }}">
+
+    <button class="nav-btn nav-secondary">
+        📄 Export to PDF
+    </button>
+</form>
+
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Customer</th>
+    <th>Challan</th>
+    <th>Status</th>
+    <th>Item Code</th>
+    <th>Process</th>
+    <th>Inward Qty</th>
+    <th>Available Qty</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r.customer_name }}</td>
+    <td>{{ r.customer_challan_no }}</td>
+    <td>{{ r.status }}</td>
+    <td>{{ r.item_code }}</td>
+    <td>{{ r.process }}</td>
+    <td>{{ r.inward_qty }}</td>
+    <td><b>{{ r.available_qty }}</b></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+<script>
+function toggleClosedDateFilters() {
+    const statusSelect = document.querySelector('select[name="status"]');
+    const dateBox = document.getElementById('closed-date-filters');
+
+    if (!statusSelect || !dateBox) return;
+
+    if (statusSelect.value === "CLOSED") {
+        dateBox.style.display = "block";
+    } else {
+        dateBox.style.display = "none";
+    }
+}
+
+// Run on page load
+document.addEventListener("DOMContentLoaded", function () {
+    toggleClosedDateFilters();
+
+    const statusSelect = document.querySelector('select[name="status"]');
+    if (statusSelect) {
+        statusSelect.addEventListener("change", toggleClosedDateFilters);
+    }
+});
+</script>
+
+</body>
+</html>
+

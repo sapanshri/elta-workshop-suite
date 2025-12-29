@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Modify/Delete – Materials</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<div class="nav-bar">
+  <a href="/materials/inward" class="nav-btn nav-secondary">Inward Entry</a>
+  <a href="/materials/dispatch" class="nav-btn nav-secondary">Material Dispatch</a>
+  <a href="/materials/inventory" class="nav-btn nav-secondary">Inventory Display</a>
+  <a href="/materials/manage" class="nav-btn nav-primary">Modify/Delete</a>
+  <a href="/" class="nav-btn nav-home">Home</a>
+</div>
+
+<!-- SECURITY -->
+<div class="card-wide" style="margin-top:12px; padding:14px;">
+  <h2 style="margin:0 0 10px;">Security</h2>
+
+  <form method="post" action="/materials/manage/load"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:end;">
+
+    <div style="flex:1; min-width:220px;">
+      <label>PIN #1</label>
+      <input id="pin1_input" name="pin1" value="{{ pin1 or '' }}" placeholder="Enter PIN" required
+             oninput="document.getElementById('pin1_keep').value=this.value">
+    </div>
+
+    <div style="flex:1; min-width:220px;">
+      <label>PIN #2</label>
+      <input id="pin2_input" name="pin2" value="{{ pin2 or '' }}" placeholder="Enter Second PIN" required
+             oninput="document.getElementById('pin2_keep').value=this.value">
+    </div>
+
+    <!-- keep latest pins for JS fetch calls -->
+    <input type="hidden" id="pin1_keep" value="{{ pin1 or '' }}">
+    <input type="hidden" id="pin2_keep" value="{{ pin2 or '' }}">
+
+    <div>
+      <button class="nav-btn nav-primary">Load Records</button>
+    </div>
+
+    <div style="margin-left:auto; color:#777; font-size:12px;">
+      Both PINs are required to edit or delete entries.
+    </div>
+  </form>
+</div>
+
+<!-- INWARD -->
+<div class="card-wide" style="margin-top:12px; padding:14px;">
+  <h3 style="margin:0 0 10px;">Inward Records (only editable challans)</h3>
+
+  <table class="inventory-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Customer</th>
+        <th>Customer Challan No</th>
+        <th>Challan Date</th>
+        <th>Code</th>
+        <th>Quantity</th>
+        <th>Available</th>
+        <th>Process</th>
+        <th>Box/Tray</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% if inward_rows %}
+      {% for r in inward_rows %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ r.customer_name }}</td>
+        <td><b>{{ r.customer_challan_no }}</b></td>
+        <td>{{ r.customer_challan_date }}</td>
+
+        <!-- inline edit form (OK for inward) -->
+        <td>
+          <form method="post" action="/materials/manage/inward/edit/{{ r.id }}"
+                style="display:flex; gap:8px; align-items:center;">
+            <input type="hidden" name="pin1" value="{{ pin1 }}">
+            <input type="hidden" name="pin2" value="{{ pin2 }}">
+            <input name="item_code" value="{{ r.item_code }}" style="width:110px;" required>
+        </td>
+
+        <td>
+            <input type="number" name="inward_qty" value="{{ r.inward_qty }}"
+                   style="width:90px;" min="0" required>
+        </td>
+
+        <td>
+            <input type="number" name="available_qty" value="{{ r.available_qty }}"
+                   style="width:90px;" min="0" required>
+        </td>
+
+        <td>
+            <input name="process" value="{{ r.process }}" style="width:140px;">
+        </td>
+
+        <td>
+            <input name="box_tray" value="{{ r.box_tray }}" style="width:110px;">
+        </td>
+
+        <td style="white-space:nowrap;">
+            <button class="nav-btn nav-secondary">Save</button>
+          </form>
+
+          <form method="post" action="/materials/manage/inward/delete/{{ r.id }}"
+                style="display:inline-block; margin-left:6px;"
+                onsubmit="return confirm('Delete this inward line? (Only allowed if no dispatch exists)');">
+            <input type="hidden" name="pin1" value="{{ pin1 }}">
+            <input type="hidden" name="pin2" value="{{ pin2 }}">
+            <button class="nav-btn nav-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="10" style="color:#777;">Enter both PINs and click Load Records.</td></tr>
+    {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- DISPATCHED -->
+<div class="card-wide" style="margin-top:12px; padding:14px;">
+  <h3 style="margin:0 0 10px;">Dispatched Records</h3>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end;">
+    <div style="min-width:320px;">
+      <label>ELTA Challan No</label>
+      <select id="eltaSelect">
+        <option value="">Select...</option>
+        {% if elta_challans %}
+          {% for e in elta_challans %}
+            <option value="{{ e.elta_challan_no }}">{{ e.elta_challan_no }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+    </div>
+
+    <button type="button" class="nav-btn nav-primary" onclick="loadDispatch()">Load</button>
+  </div>
+
+  <div id="dispatchTableWrap" style="margin-top:12px;">
+    <table class="inventory-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Cust Challan</th>
+          <th>Cust Date</th>
+          <th>ELTA Challan</th>
+          <th>Dispatch Date</th>
+          <th>Code</th>
+          <th>Process</th>
+          <th>OK</th>
+          <th>Rej</th>
+          <th>C/D</th>
+          <th>N/D</th>
+          <th>N/D (PW)</th>
+          <th>Total</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="15" style="color:#777;">Select ELTA challan and click Load.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+function toast(msg){
+  const t = document.createElement("div");
+  t.textContent = msg;
+  t.style.position = "fixed";
+  t.style.right = "18px";
+  t.style.bottom = "18px";
+  t.style.padding = "10px 14px";
+  t.style.background = "#111";
+  t.style.color = "#fff";
+  t.style.borderRadius = "10px";
+  t.style.zIndex = 9999;
+  t.style.opacity = "0.95";
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 1200);
+}
+
+async function loadDispatch(){
+  const elta = document.getElementById("eltaSelect").value;
+  if(!elta){ alert("Select ELTA Challan No"); return; }
+
+  const pin1 = document.getElementById("pin1_keep").value;
+  const pin2 = document.getElementById("pin2_keep").value;
+
+  const fd = new FormData();
+  fd.append("pin1", pin1);
+  fd.append("pin2", pin2);
+  fd.append("elta_challan_no", elta);
+
+  const res = await fetch("/materials/manage/dispatch-load", { method:"POST", body: fd });
+  if(!res.ok){ alert(await res.text()); return; }
+
+  document.getElementById("dispatchTableWrap").innerHTML = await res.text();
+  toast("Loaded ✅");
+}
+
+async function saveDispatchRow(btn, dispatchId){
+  if(btn.dataset.busy === "1") return;
+  btn.dataset.busy = "1";
+  const oldText = btn.innerText;
+  btn.innerText = "Saving...";
+  btn.disabled = true;
+
+  try{
+    const row = btn.closest("tr");
+
+    const pin1 = document.getElementById("pin1_keep").value;
+    const pin2 = document.getElementById("pin2_keep").value;
+
+    const fd = new FormData();
+    fd.append("pin1", pin1);
+    fd.append("pin2", pin2);
+
+    fd.append("elta_challan_no", row.querySelector("[name='elta_challan_no']").value);
+    fd.append("dispatch_date", row.querySelector("[name='dispatch_date']").value);
+
+    fd.append("ok_qty", row.querySelector("[name='ok_qty']").value);
+    fd.append("rej_qty", row.querySelector("[name='rej_qty']").value);
+    fd.append("cd_qty", row.querySelector("[name='cd_qty']").value);
+    fd.append("nd_qty", row.querySelector("[name='nd_qty']").value);
+    fd.append("nd_pw_qty", row.querySelector("[name='nd_pw_qty']").value);
+
+    const res = await fetch(`/materials/manage/dispatch/edit/${dispatchId}`, { method:"POST", body: fd });
+    if(!res.ok){ alert(await res.text()); return; }
+
+    document.getElementById("dispatchTableWrap").innerHTML = await res.text();
+    toast("Saved ✅");
+  } finally {
+    btn.dataset.busy = "0";
+    btn.innerText = oldText;
+    btn.disabled = false;
+  }
+}
+
+/* Optional: Live total preview while typing */
+document.addEventListener("input", function(e){
+  const row = e.target.closest("tr");
+  if(!row) return;
+  if(!e.target.name || !e.target.name.endsWith("_qty")) return;
+
+  const fields = ["ok_qty","rej_qty","cd_qty","nd_qty","nd_pw_qty"];
+  let total = 0;
+  fields.forEach(f=>{
+    const el = row.querySelector(`[name='${f}']`);
+    total += parseInt(el?.value || 0);
+  });
+
+  const out = row.querySelector(".row-total");
+  if(out) out.textContent = total;
+});
+</script>
+
+</body>
+</html>
+

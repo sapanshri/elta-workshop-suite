@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Machine – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Add Machine</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/machines/" class="nav-btn nav-secondary">🏭 Machine Master</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+    <label>Machine Code</label>
+    <input name="machine_code" placeholder="CNC-01" required>
+
+    <label>Machine Name</label>
+    <input name="machine_name" placeholder="Cincinnati Lamb 550i" required>
+
+    <label>Machine Type</label>
+    <select name="machine_type" required>
+        <option value="">-- Select --</option>
+        <option>VMC</option>
+        <option>HMC</option>
+        <option>LATHE</option>
+        <option>GRINDER</option>
+        <option>DRILL</option>
+        <option>MANUAL</option>
+        <option>OTHER</option>
+    </select>
+
+    <label>Controller</label>
+    <input name="controller" placeholder="Fanuc 18iM">
+
+    <label>Location</label>
+    <input name="location" placeholder="TB01 / Bay-1">
+
+    <label>Status</label>
+    <select name="status">
+        <option>ACTIVE</option>
+        <option>INACTIVE</option>
+        <option>SCRAP</option>
+    </select>
+
+    <label>Install Date</label>
+    <input type="date" name="install_date" value="{{ today }}">
+
+    <label>Notes</label>
+    <input name="notes" placeholder="Optional notes...">
+
+    <button class="nav-btn nav-primary full-width">Save Machine</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

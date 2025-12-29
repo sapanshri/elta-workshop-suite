@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cutting Tool Inventory – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Cutting Tool Inventory</h1>
+
+<!-- ================= NAVIGATION ================= -->
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/tools/issue" class="nav-btn nav-primary">➕ Issue Tool</a>
+    <a href="/tools/return" class="nav-btn nav-success">↩ Return Tool</a>
+    <a href="/tools/regrind" class="nav-btn nav-regrind">🔧 Regrind</a>
+    <a href="/tools/history" class="nav-btn nav-secondary">📜 History</a>
+</div>
+
+<!-- ================= TOOL ENTRY FORM ================= -->
+<form method="post" action="/tools/add" class="tool-form">
+
+  <fieldset>
+    <legend>Tool Specification</legend>
+
+    <select name="tool_type" required>
+      {% for t in tool_types %}
+        <option>{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <input name="tool_subtype" placeholder="Subtype (Twist / Stub / Long)">
+  </fieldset>
+
+  <fieldset>
+    <legend>Cutting Geometry</legend>
+
+    <input name="cutting_diameter" placeholder="Cut Ø (mm)" required>
+    <input name="cutting_length" placeholder="Cut Length (mm)" required>
+    <input name="overall_length" placeholder="OAL (mm)">
+  </fieldset>
+
+  <fieldset>
+    <legend>Shank</legend>
+
+    <select name="shank_type">
+      <option>Straight</option>
+      <option>Reduced</option>
+      <option>Weldon</option>
+      <option>Taper</option>
+    </select>
+
+    <input name="shank_diameter" placeholder="Shank Ø (mm)">
+  </fieldset>
+
+  <fieldset>
+    <legend>Inventory</legend>
+
+    <input name="material" placeholder="Material (M42 / Carbide)">
+    <input name="location" placeholder="Location">
+    <input name="total_qty" placeholder="Qty to Add" required>
+    <input name="reorder_level" placeholder="Reorder Level" value="2" style="width:120px;">
+    <input name="remarks" placeholder="Remarks">
+  </fieldset>
+
+  <button class="primary">Add / Update Stock</button>
+</form>
+
+<hr>
+
+<!-- ================= INVENTORY TABLE ================= -->
+<table class="inventory-table">
+
+<thead>
+<tr>
+    <th>Tool Type</th>
+    <th>Material</th>
+    <th>Cut Ø (mm)</th>
+    <th>Cut Length (mm)</th>
+    <th>OAL (mm)</th>
+    <th>Shank</th>
+    <th>Location</th>
+    <th>Available</th>
+    <th>Reorder</th>
+    <th>Remarks</th>
+</tr>
+</thead>
+
+<tbody>
+{% for t in tools %}
+<tr>
+    <td><strong>{{ t[1] }}</strong></td>
+    <td>{{ t[8] }}</td>
+    <td class="num">{{ t[3] }}</td>
+    <td class="num">{{ t[4] }}</td>
+    <td class="num">{{ t[5] if t[5] else "-" }}</td>
+    <td>{{ t[6] }} Ø{{ t[7] }}</td>
+    <td>{{ t[9] }}</td>
+
+    <td class="num">
+        {% if t[13] == 0 %}
+            <span class="stock-zero">0</span>
+        {% elif t[13] <= t[12] %}
+            <span class="stock-low">{{ t[13] }}</span>
+        {% else %}
+            <span class="stock-ok">{{ t[13] }}</span>
+        {% endif %}
+    </td>
+
+    <td class="num">{{ t[12] }}</td>
+    <td>{{ t[10] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

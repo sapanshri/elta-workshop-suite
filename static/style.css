@@ -1,0 +1,864 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f2f4f7;
+}
+
+/* Center the content */
+.page {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Main card */
+.card {
+    background: white;
+    padding: 30px 40px;
+    width: 420px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+/* Error heading */
+.card h1 {
+    margin-top: 0;
+    color: #b00020;
+}
+
+/* Error message */
+.error-text {
+    font-size: 16px;
+    color: #333;
+    margin: 15px 0;
+}
+
+/* Help text */
+.help-text {
+    font-size: 14px;
+    color: #555;
+}
+
+/* Contact info */
+.contact {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #222;
+}
+
+/* Divider */
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+/* Red border for error */
+.error-card {
+    border-left: 6px solid #b00020;
+}
+fieldset {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+legend {
+  font-weight: bold;
+  padding: 0 6px;
+}
+
+.tool-form input, .tool-form select {
+  margin: 5px;
+  padding: 6px;
+}
+
+.primary {
+  background: #0b5ed7;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.inventory-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.inventory-table th, .inventory-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.ok {
+  color: green;
+  font-weight: bold;
+}
+
+.bad {
+  color: red;
+  font-weight: bold;
+}
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+/* FULL BORDERS */
+.inventory-table,
+.inventory-table th,
+.inventory-table td {
+    border: 1px solid #333;
+}
+
+/* HEADER */
+.inventory-table thead th {
+    background-color: #e6e6e6;
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+}
+
+/* CELLS */
+.inventory-table td {
+    padding: 6px 8px;
+    vertical-align: middle;
+}
+
+/* NUMBER ALIGNMENT */
+.inventory-table .num {
+    text-align: center;
+}
+
+/* ROW STRIPING */
+.inventory-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* AVAILABILITY COLORS */
+.ok {
+    color: green;
+    font-weight: bold;
+}
+
+.bad {
+    color: red;
+    font-weight: bold;
+}
+/* ===== Inventory / Data Pages ===== */
+
+.page-wide {
+    padding: 20px 30px;
+}
+
+.card-wide {
+    background: white;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 1400px;   /* WIDE TABLE */
+    margin: auto;
+    text-align: left;    /* IMPORTANT */
+}
+/* ===== STOCK LEVEL HIGHLIGHTS ===== */
+
+.stock-ok {
+    color: #1a7f37;          /* green */
+    font-weight: bold;
+}
+
+.stock-low {
+    color: #b45309;          /* amber */
+    font-weight: bold;
+    background: #fff7ed;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.stock-zero {
+    color: #b00020;          /* red */
+    font-weight: bold;
+    background: #fde8e8;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.actions {
+    white-space: nowrap;
+}
+
+.inline-form {
+    display: inline-flex;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.inline-form input {
+    width: 70px;
+    padding: 4px;
+    font-size: 12px;
+}
+
+.btn-issue {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.btn-return {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+/* ===== STACKED FORM UX ===== */
+
+.form-card {
+    max-width: 480px;
+}
+
+.stacked-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.stacked-form label {
+    font-weight: bold;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.stacked-form input,
+.stacked-form select {
+    padding: 8px;
+    font-size: 14px;
+}
+
+.full-width {
+    width: 100%;
+    margin-top: 18px;
+}
+.btn-regrind {
+    background: #9333ea;   /* purple */
+    color: white;
+    padding: 6px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+/* ===== NAV TOOLBAR ===== */
+
+.nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: bold;
+
+    text-decoration: none;
+    border-radius: 4px;
+    border: 1px solid transparent;
+
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Color variants */
+.nav-home {
+    color: #1f2937;
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.nav-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.nav-success {
+    background: #16a34a;
+    color: white;
+}
+
+.nav-regrind {
+    background: #9333ea;
+    color: white;
+}
+
+.nav-secondary {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.nav-warning {
+    background: #2763eb;
+    color: white;
+}
+
+/* Hover effect */
+.nav-btn:hover {
+    opacity: 0.9;
+}
+.cal-due-soon {
+    background-color: #fff3cd;   /* soft orange */
+    color: #856404;
+    font-weight: 600;
+}
+/* ===== Gauge Status Coloring ===== */
+
+.inventory-table tr.status-ok {
+    background-color: #e8f5e9;   /* light green */
+}
+
+.inventory-table tr.status-due {
+    background-color: #fff8e1;   /* light amber */
+}
+
+.inventory-table tr.status-overdue {
+    background-color: #fdecea;   /* light red */
+}
+
+.inventory-table tr.status-damaged {
+    background-color: #eeeeee;   /* grey */
+}
+
+/* Due this month (cell-level highlight) */
+.inventory-table td.cal-due-soon {
+    background-color: #ffecb3 !important;
+    color: #8a5a00;
+    font-weight: 700;
+}
+.status-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.legend-item {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.legend-ok {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.legend-due {
+    background-color: #fff8e1;
+    color: #8a6d00;
+}
+
+.legend-overdue {
+    background-color: #fdecea;
+    color: #8a1c1c;
+}
+#closed-date-filters {
+    display: none;
+}
+/* ===== FORCE LINKS TO BE CLICKABLE ===== */
+a {
+    pointer-events: auto !important;
+}
+
+.inventory-table a,
+.nav-btn {
+    position: relative;
+    z-index: 1000;
+    pointer-events: auto !important;
+}
+
+/* Prevent table overlays from blocking clicks */
+.inventory-table td,
+.inventory-table tr {
+    position: relative;
+    z-index: 1;
+}
+/* ================= SHIFT ENTRY TABLE ================= */
+
+.shift-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.shift-table th,
+.shift-table td {
+    padding: 6px;
+    vertical-align: middle;
+}
+
+/* Normalize inputs & selects */
+.shift-table input,
+.shift-table select {
+    width: 100%;
+    height: 34px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+/* Numeric columns (OK / Reject) */
+.shift-table input[type="number"] {
+    text-align: center;
+    width: 80px;
+}
+
+/* Column widths */
+.shift-table th:nth-child(1),
+.shift-table td:nth-child(1) {
+    width: 20%;   /* Item Code */
+}
+
+.shift-table th:nth-child(2),
+.shift-table td:nth-child(2) {
+    width: 20%;   /* Machine */
+}
+
+.shift-table th:nth-child(3),
+.shift-table td:nth-child(3) {
+    width: 20%;   /* Operator */
+}
+
+.shift-table th:nth-child(4),
+.shift-table td:nth-child(4),
+.shift-table th:nth-child(5),
+.shift-table td:nth-child(5) {
+    width: 10%;   /* OK / Reject */
+}
+
+/* Prevent table overflow */
+.page-wide {
+    overflow-x: auto;
+}
+.setup-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.setup-table th,
+.setup-table td {
+    padding: 6px;
+    vertical-align: middle;
+}
+
+.setup-table input {
+    width: 100%;
+    height: 34px;
+    box-sizing: border-box;
+}
+.page, .page-wide {
+    overflow: visible;
+}
+.quick-nav{
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 10px 0;
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #eee;
+}
+.quick-nav .nav-btn{
+  width: auto !important;
+  padding: 8px 12px;
+}
+.stack{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.quick-nav{
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 10px 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    z-index: 1000;
+    border-bottom: 1px solid #eee;
+}
+
+.quick-nav .nav-btn{
+    width: auto !important;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+/* ================= HOME BACKGROUND ================= */
+
+.home-bg {
+    background-image: url("/static/img/cnc-bg.jpg"); /* add image here */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+.home-overlay{
+    min-height: 100vh;
+    padding: 30px;
+
+    /* Make background visible */
+    background: linear-gradient(
+        rgba(245,247,250,0.15),
+        rgba(245,247,250,0.25)
+    );
+}
+
+
+/* ================= HEADERS ================= */
+
+.home-title {
+    text-align: center;
+    font-size: 34px;
+    margin-bottom: 5px;
+}
+
+.home-subtitle {
+    text-align: center;
+    color: #444;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    margin: 25px 0 12px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 6px;
+}
+
+/* ================= TILE GRID ================= */
+
+.tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 90px;
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+}
+
+/* ================= TILE COLORS ================= */
+
+.tile-blue { background:#2d66e0; color:#fff; }
+.tile-green { background:#1fa34a; color:#fff; }
+.tile-purple { background:#8e3ddb; color:#fff; }
+.tile-grey { background:#e4e7eb; color:#111; }
+.tile-yellow { background:#f5b400; color:#111; }
+.tile-orange { background:#f08a24; color:#111; }
+
+/* ================= FOOTER ================= */
+
+.home-footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: #555;
+}
+/* ================= HOME DASHBOARD ================= */
+
+/* Background image:
+   Put your image at: static/img/cnc-bg.jpg
+   Test URL: http://127.0.0.1:5000/static/img/cnc-bg.jpg
+*/
+.home-bg{
+  margin: 0;
+  font-family: Arial, sans-serif;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Use a fixed pseudo-layer so background always shows */
+.home-bg::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background-image: url("/static/img/cnc-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  filter: blur(1.2px) brightness(0.82) contrast(1.05);
+  transform: scale(1.02);
+  z-index: -2;
+}
+
+/* Soft overlay for readability but still visible background */
+.home-bg::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background: rgba(245,247,250,0.55);
+  z-index: -1;
+}
+
+.home-wrap{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+
+/* Header */
+.home-header{
+  text-align: center;
+  padding: 8px 0 18px;
+}
+
+.home-title{
+  margin: 0;
+  font-size: 36px;
+  letter-spacing: 0.3px;
+}
+
+.home-subtitle{
+  margin-top: 8px;
+  color: #333;
+  opacity: 0.85;
+}
+
+/* Sections */
+.home-section{
+  margin-top: 18px;
+  padding-top: 6px;
+}
+
+.home-section-head{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 10px;
+}
+
+.home-section-head h2{
+  margin: 0;
+  font-size: 22px;
+}
+
+.home-section-line{
+  height: 2px;
+  background: rgba(0,0,0,0.15);
+  flex: 1;
+}
+
+/* Tiles */
+.tile-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.tile{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  height: 86px;
+  border-radius: 8px;
+
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 18px;
+
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.6);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  user-select: none;
+}
+
+.tile:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.25);
+}
+
+.tile:active{
+  transform: translateY(-1px);
+}
+
+/* Tile internals */
+.tile-emoji{
+  font-size: 22px;
+  width: 34px;
+  text-align: center;
+}
+
+.tile-text{
+  line-height: 1.1;
+  text-align: center;
+  padding: 0 10px;
+}
+
+/* Color themes */
+.tile-blue{ background:#2d66e0; color:#fff; }
+.tile-green{ background:#1fa34a; color:#fff; }
+.tile-purple{ background:#8e3ddb; color:#fff; }
+.tile-grey{ background:#e7eaee; color:#111; }
+.tile-yellow{ background:#f5b400; color:#111; }
+.tile-orange{ background:#f08a24; color:#111; }
+
+.tile-red-outline{
+  background: rgba(255,255,255,0.75);
+  color: #111;
+  border: 2px solid #c0392b;
+}
+
+/* Disabled tiles */
+.tile-disabled{
+  background: rgba(230,233,237,0.75);
+  color: rgba(0,0,0,0.55);
+  box-shadow: none;
+  border: 1px dashed rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+/* Footer */
+.home-footer{
+  text-align: center;
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.65);
+}
+/* ===== Maintenance Status Row Colors ===== */
+.status-ok td { background: rgba(46, 204, 113, 0.10); }
+.status-due td { background: rgba(241, 196, 15, 0.18); }
+.status-overdue td { background: rgba(231, 76, 60, 0.18); }
+
+/* Legend */
+.legend{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.legend span{
+  padding:6px 10px;
+  border-radius:6px;
+  font-weight:700;
+  font-size:13px;
+}
+.legend-ok{ background: rgba(46, 204, 113, 0.20); }
+.legend-due{ background: rgba(241, 196, 15, 0.25); }
+.legend-overdue{ background: rgba(231, 76, 60, 0.25); }
+/* OPEN breakdown highlight using overdue color */
+.status-overdue td { background: rgba(231, 76, 60, 0.18); }
+.status-ok td { background: rgba(46, 204, 113, 0.10); }
+.tile-red{
+  background: linear-gradient(135deg, #ff6b6b, #c0392b);
+  color: #fff;
+}
+.tile-neutral{
+  background: linear-gradient(135deg, #bfc7d5, #6b7a99);
+  color: #111;
+}
+.tile-red {
+  background: linear-gradient(135deg, #ff6b6b, #d63031);
+  color: #fff;
+}
+.tile-red:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+/* ---------- Inward Entry Table Layout ---------- */
+.table-scroll{
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* nicer entry table than inventory-table */
+.entry-table{
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* 🔥 makes columns obey widths */
+  min-width: 760px;    /* avoids squishing */
+}
+
+.entry-table thead th{
+  background: #f1f1f1;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ddd;
+  border-right: 1px solid #e5e5e5;
+  text-align: center;
+}
+
+.entry-table td{
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  border-right: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.entry-table th:last-child,
+.entry-table td:last-child{
+  border-right: none;
+}
+
+/* inputs inside table */
+.cell-input{
+  width: 100%;
+  height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  background: #fff;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* qty center + clean */
+.qty-input{
+  text-align: center;
+}
+
+/* spacing under table */
+.form-actions{
+  margin-top: 14px;
+}
+
+/* OPTIONAL: make inward page wider like your manage page */
+.page-wide .card-wide{
+  max-width: 1100px;
+}
+

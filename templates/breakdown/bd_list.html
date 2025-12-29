@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Breakdown Records – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Breakdown Maintenance</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/breakdown/add" class="nav-btn nav-primary">➕ New Breakdown</a>
+</div>
+
+<div class="legend" style="margin:10px 0 12px;">
+  <span class="legend-overdue">OPEN: {{ counts.open_cnt or 0 }}</span>
+  <span class="legend-ok">CLOSED: {{ counts.closed_cnt or 0 }}</span>
+</div>
+
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+  <label>Machine</label>
+  <select name="machine_code">
+    <option value="">-- All --</option>
+    {% for m in machines %}
+      <option value="{{ m.machine_code }}"
+        {% if request.args.get('machine_code') == m.machine_code %}selected{% endif %}>
+        {{ m.machine_code }} | {{ m.machine_name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Status</label>
+  <select name="status">
+    <option value="">-- All --</option>
+    <option value="OPEN" {% if request.args.get('status')=='OPEN' %}selected{% endif %}>OPEN</option>
+    <option value="CLOSED" {% if request.args.get('status')=='CLOSED' %}selected{% endif %}>CLOSED</option>
+  </select>
+
+  <label>Date From</label>
+  <input type="date" name="from_date" value="{{ request.args.get('from_date','') }}">
+
+  <label>Date To</label>
+  <input type="date" name="to_date" value="{{ request.args.get('to_date','') }}">
+
+  <button class="nav-btn nav-primary full-width">Apply Filters</button>
+  <a class="nav-btn nav-neutral full-width" style="text-align:center;" href="/breakdown/list">Clear Filters</a>
+</form>
+
+<table class="inventory-table">
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Machine</th>
+  <th>Start</th>
+  <th>End</th>
+  <th>Downtime (min)</th>
+  <th>Problem</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr class="status-{{ 'overdue' if r.status=='OPEN' else 'ok' }}">
+  <td>{{ r.breakdown_date }}</td>
+  <td><b>{{ r.machine_code }}</b><br><span style="color:#666; font-size:12px;">{{ r.machine_name or "" }}</span></td>
+  <td>{{ r.start_time }}</td>
+  <td>{{ r.end_time or "-" }}</td>
+  <td><b>{{ r.downtime_min }}</b></td>
+  <td>{{ r.problem }}</td>
+  <td><b>{{ r.status }}</b></td>
+  <td>
+    <a class="nav-btn nav-secondary" href="/breakdown/view/{{ r.id }}">View</a>
+    {% if r.status == 'OPEN' %}
+      <a class="nav-btn nav-primary" href="/breakdown/close/{{ r.id }}">Close</a>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+</body>
+</html>
+

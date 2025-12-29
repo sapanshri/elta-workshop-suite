@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ header.complaint_no }} – Complaint</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Complaint: {{ header.complaint_no }}</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/complaints" class="nav-btn nav-secondary">📋 Complaints</a>
+  <a href="/complaints/view/{{ header.id }}/pdf"
+   class="nav-btn nav-secondary">
+  🖨️ Export PDF
+</a>
+
+</div>
+
+<div class="card-wide" style="margin-top:12px; padding:14px;">
+  <h3 style="margin:0 0 10px;">Update / Close (2-PIN required)</h3>
+
+  <form method="post" action="/complaints/update/{{ header.id }}" class="stacked-form">
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:220px;">
+        <label>PIN #1</label>
+        <input name="pin1" placeholder="Enter PIN #1" required>
+      </div>
+      <div style="flex:1; min-width:220px;">
+        <label>PIN #2</label>
+        <input name="pin2" placeholder="Enter PIN #2" required>
+      </div>
+    </div>
+
+    <hr>
+
+    <label>Complaint Date</label>
+    <input type="date" name="complaint_date" value="{{ header.complaint_date }}" required>
+
+    <label>Customer</label>
+    <select name="customer_id" required>
+      {% for c in customers %}
+        <option value="{{ c.id }}" {% if c.id == header.customer_id %}selected{% endif %}>
+          {{ c.customer_name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label>Customer Ref No</label>
+    <input name="customer_ref_no" value="{{ header.customer_ref_no or '' }}">
+
+    <label>Item Code</label>
+    <select name="item_code" required>
+      {% for i in item_codes %}
+        <option value="{{ i.item_code }}" {% if i.item_code == header.item_code %}selected{% endif %}>
+          {{ i.item_code }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label>Batch No</label>
+    <input name="batch_no" value="{{ header.batch_no or '' }}">
+
+    <label>Qty Affected</label>
+    <input type="number" min="0" name="qty_affected" value="{{ header.qty_affected or 0 }}">
+
+    <label>Issue Category</label>
+    <select name="issue_category" required>
+      {% for cat in categories %}
+        <option value="{{ cat }}" {% if cat == header.issue_category %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Issue Description</label>
+    <textarea name="issue_description" rows="4" required>{{ header.issue_description }}</textarea>
+
+    <label>Severity</label>
+    <select name="severity" required>
+      {% for s in severities %}
+        <option value="{{ s }}" {% if s == header.severity %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Status</label>
+    <select name="status" required>
+      {% for st in statuses %}
+        <option value="{{ st }}" {% if st == header.status %}selected{% endif %}>{{ st }}</option>
+      {% endfor %}
+    </select>
+
+    <hr>
+
+    <label>Machine</label>
+    <select name="machine_code">
+      <option value="">-- None --</option>
+      {% for m in machines %}
+        <option value="{{ m.machine_code }}" {% if m.machine_code == (header.machine_code or '') %}selected{% endif %}>
+          {{ m.machine_code }} | {{ m.machine_name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label>Job No</label>
+    <input name="job_no" value="{{ header.job_no or '' }}">
+
+    <label>Shift Date</label>
+    <input type="date" name="shift_date" value="{{ header.shift_date or '' }}">
+
+    <label>Shift</label>
+    <select name="shift">
+      <option value="" {% if not header.shift %}selected{% endif %}>--</option>
+      <option {% if header.shift == 'A' %}selected{% endif %}>A</option>
+      <option {% if header.shift == 'B' %}selected{% endif %}>B</option>
+      <option {% if header.shift == 'C' %}selected{% endif %}>C</option>
+    </select>
+
+    <hr>
+
+    <label>Assigned To (Owner)</label>
+    <input name="assigned_to" value="{{ header.assigned_to or '' }}">
+
+    <label>Containment Action</label>
+    <textarea name="containment_action" rows="3">{{ header.containment_action or '' }}</textarea>
+
+    <label>Root Cause (5-Why)</label>
+    <textarea name="root_cause_5why" rows="4">{{ header.root_cause_5why or '' }}</textarea>
+
+    <label>Corrective Action</label>
+    <textarea name="corrective_action" rows="3">{{ header.corrective_action or '' }}</textarea>
+
+    <label>Preventive Action</label>
+    <textarea name="preventive_action" rows="3">{{ header.preventive_action or '' }}</textarea>
+
+    <hr>
+
+    <label>Closure Date (required when status=CLOSED)</label>
+    <input type="date" name="closure_date" value="{{ header.closure_date or '' }}">
+
+    <label>Closure Remarks</label>
+    <textarea name="closure_remarks" rows="3">{{ header.closure_remarks or '' }}</textarea>
+
+    <button class="nav-btn nav-primary full-width">Save Update</button>
+  </form>
+</div>
+
+<div class="card-wide" style="margin-top:12px; padding:14px;">
+  <h3 style="margin:0 0 10px;">Action Log (2-PIN required)</h3>
+
+  <form method="post" action="/complaints/log/add/{{ header.id }}" class="stacked-form" style="margin-bottom:12px;">
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:180px;">
+        <label>PIN #1</label>
+        <input name="pin1" required>
+      </div>
+      <div style="flex:1; min-width:180px;">
+        <label>PIN #2</label>
+        <input name="pin2" required>
+      </div>
+    </div>
+
+    <label>Date</label>
+    <input type="date" name="action_date" value="{{ today }}" required>
+
+    <label>Type</label>
+    <select name="action_type" required>
+      {% for t in log_types %}
+        <option value="{{ t }}">{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <label>By</label>
+    <input name="by_user" placeholder="Name (optional)" value="{{ header.assigned_to or '' }}">
+
+    <label>Notes</label>
+    <textarea name="notes" rows="3" required></textarea>
+
+    <button class="nav-btn nav-secondary full-width">Add Log</button>
+  </form>
+
+  <table class="inventory-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>By</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for l in logs %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ l.action_date }}</td>
+        <td><b>{{ l.action_type }}</b></td>
+        <td>{{ l.by_user or "-" }}</td>
+        <td>{{ l.notes }}</td>
+      </tr>
+    {% endfor %}
+    {% if logs|length == 0 %}
+      <tr><td colspan="5" style="color:#777;">No logs yet.</td></tr>
+    {% endif %}
+    </tbody>
+  </table>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>
+

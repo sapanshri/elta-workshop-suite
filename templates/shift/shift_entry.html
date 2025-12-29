@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shift Production Entry</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Shift Production Entry</h1>
+
+<form method="post" class="stacked-form">
+
+<label>Date</label>
+<input type="date" name="shift_date" value="{{ today }}" required>
+
+<label>Shift</label>
+<select name="shift" required>
+    <option>A</option>
+    <option>B</option>
+  
+</select>
+
+<label>Shift Incharge</label>
+<input name="shift_incharge" required>
+
+<hr>
+
+<h3>Production</h3>
+
+<table class="inventory-table shift-table">
+
+<thead>
+<tr>
+    <th>Machine</th>
+    <th>Item Code</th>
+    <th>Operator</th>
+    <th>OK</th>
+    <th>Reject</th>
+</tr>
+</thead>
+<tbody>
+{% for i in range(6) %}
+<tr>
+    <td>
+        <select name="machine_code[]">
+            <option value="">-- Select Machine --</option>
+            {% for m in machines %}
+            <option value="{{ m.machine_code }}">{{ m.machine_code }} | {{ m.machine_name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select name="item_code[]">
+            <option value="">-- Select --</option>
+            {% for ic in item_codes %}
+            <option value="{{ ic.item_code }}">{{ ic.item_code }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td><input name="operator[]"></td>
+    <td><input type="number" name="ok_qty[]" value="0"></td>
+    <td><input type="number" name="rej_qty[]" value="0"></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<hr>
+
+<h3>Setup Change</h3>
+
+<table class="inventory-table setup-table">
+<thead>
+<tr>
+    <th>Job &amp; Setup No.</th>
+    <th>Change Time</th>
+    <th>Machine No.</th>
+    <th>Production Start Time</th>
+</tr>
+</thead>
+<tbody>
+
+{% for i in range(3) %}
+<tr>
+    <td>
+        <input name="setup_job[]" placeholder="Job / Setup No.">
+    </td>
+    <td>
+        <input type="time" name="setup_change_time[]">
+    </td>
+    <td>
+        <input name="setup_machine[]" placeholder="Machine No.">
+    </td>
+    <td>
+        <input type="time" name="setup_start_time[]">
+    </td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+<hr>
+
+<h3>Attendance</h3>
+<table class="inventory-table shift-table">
+
+<thead>
+<tr>
+    <th>Operator</th>
+    <th>Status</th>
+</tr>
+</thead>
+<tbody>
+{% for i in range(5) %}
+<tr>
+    <td><input name="att_operator[]"></td>
+    <td>
+        <select name="att_status[]">
+            <option>Present</option>
+            <option>Absent</option>
+            <option>Half</option>
+        </select>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<hr>
+
+<h3>Downtime</h3>
+<table class="inventory-table shift-table">
+
+<thead>
+<tr>
+    <th>Machine</th>
+    <th>Reason</th>
+    <th>Minutes</th>
+</tr>
+</thead>
+<tbody>
+{% for i in range(3) %}
+<tr>
+    <td>
+        <select name="machine_code[]">
+            <option value="">-- Select Machine --</option>
+            {% for m in machines %}
+            <option value="{{ m.machine_code }}">{{ m.machine_code }} | {{ m.machine_name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td><input name="dt_reason[]"></td>
+    <td><input type="number" name="dt_minutes[]" value="0"></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<button class="nav-btn nav-primary full-width">
+    Save Shift Report
+</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

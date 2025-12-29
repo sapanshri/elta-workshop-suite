@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Issue Gauge – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Issue Gauge</h1>
+
+<div class="nav-bar">
+    <a href="/gauges" class="nav-btn nav-secondary">⬅ Back</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+<label>Issue Date</label>
+<input type="date" name="issue_date" value="{{ today }}" required>
+
+<label>Gauge</label>
+<select name="gauge_id" required>
+{% for g in gauges %}
+<option value="{{ g.id }}">
+    {{ g.gauge_code }} | {{ g.subtype }} | {{ g.range }}
+</option>
+{% endfor %}
+</select>
+
+<label>Operator</label>
+<input name="operator">
+
+<label>Machine</label>
+<input name="machine">
+
+<label>Job</label>
+<input name="job">
+
+<label>Shift</label>
+<select name="shift">
+    <option>A</option>
+    <option>B</option>
+    <option>C</option>
+</select>
+
+<button class="nav-btn nav-primary full-width">
+    Issue Gauge
+</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

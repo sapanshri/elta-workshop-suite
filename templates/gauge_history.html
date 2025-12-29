@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gauge History – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Gauge Issue / Return History</h1>
+
+<div class="nav-bar">
+    <a href="/gauges" class="nav-btn nav-secondary">⬅ Back</a>
+</div>
+
+<table class="data-table">
+<thead>
+<tr>
+    <th>Gauge</th>
+    <th>Action</th>
+    <th>Operator</th>
+    <th>Machine</th>
+    <th>Job</th>
+    <th>Shift</th>
+    <th>Condition</th>
+    <th>Date</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r.gauge_code }} ({{ r.subtype }})</td>
+    <td>{{ r.action }}</td>
+    <td>{{ r.operator }}</td>
+    <td>{{ r.machine }}</td>
+    <td>{{ r.job }}</td>
+    <td>{{ r.shift }}</td>
+    <td>{{ r.condition_on_return or "-" }}</td>
+    <td>{{ r.txn_date }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

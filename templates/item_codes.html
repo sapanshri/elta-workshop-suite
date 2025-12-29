@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Item Code Master</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Item Code Master</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/item-codes/add" class="nav-btn nav-primary">➕ Add Item Code</a>
+</div>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Item Code</th>
+    <th>Description</th>
+    <th>Remarks</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for i in item_codes %}
+<tr>
+    <td>{{ i.item_code }}</td>
+    <td>{{ i.description or "-" }}</td>
+    <td>{{ i.remarks or "-" }}</td>
+    <td>
+        <a href="/item-codes/edit/{{ i.id }}"
+           class="nav-btn nav-secondary">
+           Edit
+        </a>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

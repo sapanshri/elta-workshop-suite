@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Breakdown Detail – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Breakdown Detail</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/breakdown/list" class="nav-btn nav-secondary">🧯 Breakdown List</a>
+  {% if row.status == 'OPEN' %}
+    <a href="/breakdown/close/{{ row.id }}" class="nav-btn nav-primary">Close</a>
+  {% endif %}
+</div>
+
+<table class="inventory-table">
+  <tr><th>Date</th><td>{{ row.breakdown_date }}</td></tr>
+  <tr><th>Machine</th><td><b>{{ row.machine_code }}</b> {{ row.machine_name and ("| " ~ row.machine_name) or "" }}</td></tr>
+  <tr><th>Start</th><td>{{ row.start_time }}</td></tr>
+  <tr><th>End</th><td>{{ row.end_time or "-" }}</td></tr>
+  <tr><th>Downtime</th><td><b>{{ row.downtime_min }}</b> minutes</td></tr>
+  <tr><th>Status</th><td><b>{{ row.status }}</b></td></tr>
+  <tr><th>Problem</th><td>{{ row.problem }}</td></tr>
+  <tr><th>Root Cause</th><td>{{ row.root_cause or "-" }}</td></tr>
+  <tr><th>Action Taken</th><td>{{ row.action_taken or "-" }}</td></tr>
+  <tr><th>Handled By</th><td>{{ row.handled_by or "-" }}</td></tr>
+</table>
+
+</div>
+</div>
+</body>
+</html>
+

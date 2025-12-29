@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Issue Insert – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Issue Insert</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/inserts" class="nav-btn nav-secondary">🔹 Inserts</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+    <label>Issue Date</label>
+    <input type="date" name="issue_date" value="{{ today }}" required>
+
+    <label>Insert</label>
+    <select name="insert_id" required>
+        {% for i in inserts %}
+        <option value="{{ i[0] }}">
+            {{ i[1] }} | {{ i[2] }} | {{ i[3] }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" name="qty" min="1" required>
+
+    <label>Operator</label>
+    <input name="operator">
+
+    <label>Machine</label>
+    <input name="machine">
+
+    <label>Job</label>
+    <input name="job">
+
+    <label>Shift</label>
+    <select name="shift">
+        <option>A</option>
+        <option>B</option>
+       
+    </select>
+
+    <button class="nav-btn nav-primary full-width">Issue Insert</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Customer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Edit Customer</h1>
+
+<form method="post" class="stacked-form">
+
+<label>Customer Name</label>
+<input name="customer_name" value="{{ customer.customer_name }}" required>
+
+<label>Short Code</label>
+<input name="short_code" value="{{ customer.short_code }}">
+
+<label>Remarks</label>
+<input name="remarks" value="{{ customer.remarks }}">
+
+<label>Admin PIN</label>
+<input type="password" name="pin" required>
+
+<button class="nav-btn nav-primary full-width">
+    Update Customer
+</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

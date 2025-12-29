@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add PM – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Add Preventive Maintenance</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/maintenance/pm" class="nav-btn nav-secondary">🧰 PM Dashboard</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+  <label>Machine</label>
+  <select name="machine_code" required>
+    <option value="">-- Select Machine --</option>
+    {% for m in machines %}
+      <option value="{{ m.machine_code }}">{{ m.machine_code }} | {{ m.machine_name }}</option>
+    {% endfor %}
+  </select>
+
+  <label>PM Name</label>
+  <input name="pm_name" placeholder="e.g. Spindle lubrication" required>
+
+  <label>Frequency (days)</label>
+  <input type="number" name="frequency_days" min="1" value="30" required>
+
+  <label>Responsibility</label>
+  <select name="responsibility">
+    <option>Operator</option>
+    <option>Maintenance</option>
+    <option>Vendor</option>
+  </select>
+
+  <label>Checklist (optional)</label>
+  <textarea name="checklist" rows="5" placeholder="- Point 1&#10;- Point 2"></textarea>
+
+  <button class="nav-btn nav-primary full-width">Save PM</button>
+</form>
+
+</div>
+</div>
+</body>
+</html>
+

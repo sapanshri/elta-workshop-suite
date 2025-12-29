@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Return Cutting Tool</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Return Cutting Tool</h1>
+
+<form method="post" class="stacked-form">
+
+    <label>Return Date</label>
+    <input type="date" name="return_date" value="{{ today }}" required>
+
+    <label>Tool</label>
+    <select name="tool_id" required>
+        {% for t in tools %}
+        <option value="{{ t[0] }}">
+            {{ t[1] }} | {{ t[2] }} | Ø{{ t[3] }} × {{ t[4] }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" name="qty" min="1" required>
+
+    <label>Supervisor Name</label>
+    <input name="operator">
+
+    <label>Shift</label>
+    <select name="shift" required>
+        <option>A</option>
+        <option>B</option>
+        
+    </select>
+
+    <label>Condition of Tool</label>
+    <select name="condition" required>
+        <option>Good</option>
+        <option>Blunt</option>
+        <option>Broken</option>
+    </select>
+    <label>Machine (optional)</label>
+    <select name="machine_code">
+        <option value="">-- Not Applicable --</option>
+        {% for m in machines %}
+        <option value="{{ m.machine_code }}">
+        {{ m.machine_code }} | {{ m.machine_name }}
+        </option>
+        {% endfor %}
+    </select>
+    <label>Remarks</label>
+    <input name="remarks">
+
+    <button class="btn-return full-width">Return Tool</button>
+
+</form>
+
+<p style="margin-top:15px;">
+    <div class="nav-bar">
+       <a href="/" class="nav-link">🏠 Home</a>
+       <a href="/tools" class="nav-link">🔧 Tools</a>
+    </div>
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
+

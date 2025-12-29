@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customers – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Customer Master</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/customers/add" class="nav-btn nav-primary">➕ Add Customer</a>
+</div>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Name</th>
+    <th>Short Code</th>
+    <th>Remarks</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for c in customers %}
+<tr>
+    <td>{{ c.customer_name }}</td>
+    <td>{{ c.short_code or "-" }}</td>
+    <td>{{ c.remarks or "-" }}</td>
+    <td>
+        <a href="/customers/edit/{{ c.id }}" class="nav-btn nav-secondary">Edit</a>
+        <form method="post"
+              action="/customers/delete/{{ c.id }}"
+              style="display:inline;">
+            <input type="password" name="pin" placeholder="PIN" required>
+            <button class="nav-btn nav-danger">Delete</button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

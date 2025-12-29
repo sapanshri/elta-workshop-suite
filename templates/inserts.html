@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Insert Inventory – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Insert Inventory</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/inserts/issue" class="nav-btn nav-primary">➕ Issue Insert</a>
+    <a href="/inserts/scrap" class="nav-btn nav-success">🗑 Scrap Insert</a>
+    <a href="/inserts/history" class="nav-btn nav-secondary">📜 History</a>
+</div>
+
+<!-- ================= INSERT MASTER FORM ================= -->
+<form method="post" action="/inserts/add" class="tool-form">
+
+    <input name="insert_type" placeholder="Insert Type (CNMG / TNMG)" required>
+    <input name="size" placeholder="Size (120408)" required>
+    <input name="grade" placeholder="Grade (P30 / K10)" required>
+    <input name="edges" placeholder="No. of Edges" required>
+    <input name="total_qty" placeholder="Total Qty" required>
+    <input name="reorder_level" value="10">
+    <input name="remarks" placeholder="Remarks">
+
+    <button class="primary">Add / Update Stock</button>
+</form>
+
+<hr>
+
+<!-- ================= INVENTORY TABLE ================= -->
+<table class="inventory-table">
+
+<thead>
+<tr>
+    <th>Insert</th>
+    <th>Size</th>
+    <th>Grade</th>
+    <th>Edges</th>
+    <th>Available</th>
+    <th>Reorder</th>
+    <th>Remarks</th>
+</tr>
+</thead>
+
+<tbody>
+{% for i in inserts %}
+<tr>
+    <td><strong>{{ i[1] }}</strong></td>
+    <td>{{ i[2] }}</td>
+    <td>{{ i[3] }}</td>
+    <td class="num">{{ i[4] }}</td>
+
+    <td class="num">
+        {% if i[6] == 0 %}
+            <span class="stock-zero">0</span>
+        {% elif i[6] <= i[7] %}
+            <span class="stock-low">{{ i[6] }}</span>
+        {% else %}
+            <span class="stock-ok">{{ i[6] }}</span>
+        {% endif %}
+    </td>
+
+    <td class="num">{{ i[7] }}</td>
+    <td>{{ i[8] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

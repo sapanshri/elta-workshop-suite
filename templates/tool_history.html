@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tool Issue / Return History</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Tool Issue / Return History</h1>
+
+<!-- ================= FILTERS ================= -->
+<form method="get" class="tool-form">
+
+    <select name="tool_id">
+        <option value="">All Tools</option>
+        {% for t in tools %}
+        <option value="{{ t[0] }}">
+            {{ t[1] }} Ø{{ t[2] }} {{ t[3] }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <select name="action">
+        <option value="">All Actions</option>
+        <option>ISSUE</option>
+        <option>RETURN</option>
+    </select>
+
+    <input type="date" name="date_from">
+    <input type="date" name="date_to">
+
+    <button class="primary">Filter</button>
+</form>
+
+<hr>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Date</th>
+    <th>Tool</th>
+    <th>Action</th>
+    <th>Qty</th>
+    <th>Operator</th>
+    <th>Machine</th>
+    <th>Shift</th>
+    <th>Job</th>
+    <th>Condition</th>
+    <th>Remarks</th>
+</tr>
+</thead>
+
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r[0] }}</td>
+    <td>{{ r[1] }} {{ r[2] }} Ø{{ r[3] }}×{{ r[4] }}</td>
+    <td><strong>{{ r[5] }}</strong></td>
+    <td class="num">{{ r[6] }}</td>
+    <td>{{ r[7] }}</td>
+    <td>{{ r[8] }}</td>
+    <td>{{ r[9] }}</td>
+    <td>{{ r[10] }}</td>
+    <td>{{ r[11] or "-" }}</td>
+    <td>{{ r[12] or "-" }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<p style="margin-top:15px;">
+   <div class="nav-bar">
+       <a href="/" class="nav-link">🏠 Home</a>
+       <a href="/tools" class="nav-link">🔧 Tools</a>
+  </div>
+
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
+

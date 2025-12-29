@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ mm.machine_code }} – Machine History Card</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Machine History Card</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/machine-history/" class="nav-btn nav-secondary">🧾 All Machines</a>
+  <a href="/maintenance/pm" class="nav-btn nav-secondary">🧰 PM</a>
+  <a href="/breakdown/list" class="nav-btn nav-secondary">🧯 Breakdown</a>
+</div>
+
+<!-- MACHINE HEADER -->
+<div class="card-wide" style="margin:12px 0; padding:14px;">
+  <div style="font-size:18px;">
+    <b>{{ mm.machine_code }}</b> | {{ mm.machine_name }}
+  </div>
+  <div style="margin-top:6px; color:#555; display:flex; gap:18px; flex-wrap:wrap;">
+    <div><b>Type:</b> {{ mm.machine_type }}</div>
+    <div><b>Controller:</b> {{ mm.controller or "-" }}</div>
+    <div><b>Location:</b> {{ mm.location or "-" }}</div>
+    <div><b>Status:</b> {{ mm.status }}</div>
+  </div>
+  {% if mm.notes %}
+  <div style="margin-top:8px; color:#666;">
+    <b>Notes:</b> {{ mm.notes }}
+  </div>
+  {% endif %}
+</div>
+
+<!-- SUMMARY TILES -->
+<div class="tile-grid" style="margin: 10px 0 15px;">
+  <div class="tile tile-yellow" style="cursor:default;">
+    <div class="tile-emoji">🧰</div>
+    <div class="tile-text">
+      PM: Overdue {{ pm_counts.overdue or 0 }} | Due {{ pm_counts.due or 0 }} | OK {{ pm_counts.ok or 0 }}
+    </div>
+  </div>
+
+  <div class="tile tile-red" style="cursor:default;">
+    <div class="tile-emoji">🧯</div>
+    <div class="tile-text">
+      Breakdowns: OPEN {{ open_breakdowns }} | Downtime (30d): {{ downtime_30 }} min
+    </div>
+  </div>
+</div>
+
+<!-- NEXT PM -->
+<h3 style="margin: 10px 0 6px;">Next Preventive Maintenance</h3>
+{% if next_pm %}
+<table class="inventory-table">
+<thead>
+<tr>
+  <th>PM</th>
+  <th>Status</th>
+  <th>Next Due</th>
+  <th>Last Done</th>
+  <th>Freq</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="status-{{ next_pm.status|lower }}">
+  <td>{{ next_pm.pm_name }}</td>
+  <td><b>{{ next_pm.status }}</b></td>
+  <td><b>{{ next_pm.next_due_date }}</b></td>
+  <td>{{ next_pm.last_done_date or "-" }}</td>
+  <td>{{ next_pm.frequency_days }} days</td>
+  <td><a class="nav-btn nav-primary" href="/maintenance/pm/done/{{ next_pm.schedule_id }}">Mark Done</a></td>
+</tr>
+</tbody>
+</table>
+{% else %}
+<p style="color:#777;">No PM configured for this machine.</p>
+{% endif %}
+
+<!-- PM HISTORY -->
+<h3 style="margin: 14px 0 6px;">Recent PM History</h3>
+<table class="inventory-table">
+<thead>
+<tr>
+  <th>Date</th>
+  <th>PM</th>
+  <th>Done By</th>
+  <th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+{% for h in last_pm_done %}
+<tr>
+  <td>{{ h.done_date }}</td>
+  <td>{{ h.pm_name }}</td>
+  <td>{{ h.done_by or "-" }}</td>
+  <td>{{ h.remarks or "-" }}</td>
+</tr>
+{% endfor %}
+{% if last_pm_done|length == 0 %}
+<tr><td colspan="4" style="color:#777;">No PM history yet.</td></tr>
+{% endif %}
+</tbody>
+</table>
+
+<!-- BREAKDOWN HISTORY -->
+<h3 style="margin: 14px 0 6px;">Recent Breakdowns</h3>
+<table class="inventory-table">
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Start</th>
+  <th>End</th>
+  <th>Downtime</th>
+  <th>Problem</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for b in last_breakdowns %}
+<tr class="status-{{ 'overdue' if b.status=='OPEN' else 'ok' }}">
+  <td>{{ b.breakdown_date }}</td>
+  <td>{{ b.start_time }}</td>
+  <td>{{ b.end_time or "-" }}</td>
+  <td><b>{{ b.downtime_min }}</b> min</td>
+  <td>{{ b.problem }}</td>
+  <td><b>{{ b.status }}</b></td>
+  <td>
+    <a class="nav-btn nav-secondary" href="/breakdown/view/{{ b.id }}">View</a>
+    {% if b.status == 'OPEN' %}
+      <a class="nav-btn nav-primary" href="/breakdown/close/{{ b.id }}">Close</a>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+{% if last_breakdowns|length == 0 %}
+<tr><td colspan="7" style="color:#777;">No breakdowns recorded.</td></tr>
+{% endif %}
+</tbody>
+</table>
+
+</div>
+</div>
+</body>
+</html>
+

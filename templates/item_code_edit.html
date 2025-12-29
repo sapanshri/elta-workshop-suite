@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Item Code</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Edit Item Code</h1>
+
+<form method="post" class="stacked-form">
+
+<label>Item Code</label>
+<input name="item_code" value="{{ item.item_code }}" required>
+
+<label>Description</label>
+<input name="description" value="{{ item.description }}">
+
+<label>Remarks</label>
+<input name="remarks" value="{{ item.remarks }}">
+
+<hr>
+
+<label>Admin PIN</label>
+<input type="password" name="pin" required>
+
+<button class="nav-btn nav-primary full-width">
+    Update Item Code
+</button>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

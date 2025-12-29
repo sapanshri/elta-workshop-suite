@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Customer Complaints – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Customer Complaints</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/complaints/add" class="nav-btn nav-primary">➕ Add Complaint</a>
+</div>
+
+<form method="get" class="stacked-form" style="margin:12px 0 18px;">
+
+  <label>Customer</label>
+  <select name="customer_id">
+    <option value="">-- All --</option>
+    {% for c in customers %}
+      <option value="{{ c.id }}" {% if request.args.get('customer_id') == c.id|string %}selected{% endif %}>
+        {{ c.customer_name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Item Code</label>
+  <select name="item_code">
+    <option value="">-- All --</option>
+    {% for i in item_codes %}
+      <option value="{{ i.item_code }}" {% if request.args.get('item_code') == i.item_code %}selected{% endif %}>
+        {{ i.item_code }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Status</label>
+  <select name="status">
+    <option value="">-- All --</option>
+    {% for s in statuses %}
+      <option value="{{ s }}" {% if request.args.get('status') == s %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Severity</label>
+  <select name="severity">
+    <option value="">-- All --</option>
+    {% for sev in severities %}
+      <option value="{{ sev }}" {% if request.args.get('severity') == sev %}selected{% endif %}>{{ sev }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Date From</label>
+  <input type="date" name="from_date" value="{{ request.args.get('from_date','') }}">
+
+  <label>Date To</label>
+  <input type="date" name="to_date" value="{{ request.args.get('to_date','') }}">
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+    <button class="nav-btn nav-primary">Apply Filters</button>
+    <a href="/complaints" class="nav-btn nav-secondary">Clear Filters</a>
+  </div>
+</form>
+
+<table class="inventory-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Complaint No</th>
+      <th>Date</th>
+      <th>Customer</th>
+      <th>Item</th>
+      <th>Category</th>
+      <th>Severity</th>
+      <th>Status</th>
+      <th>Owner</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td><b>{{ r.complaint_no }}</b></td>
+      <td>{{ r.complaint_date }}</td>
+      <td>{{ r.customer_name }}</td>
+      <td>{{ r.item_code }}</td>
+      <td>{{ r.issue_category }}</td>
+      <td><b>{{ r.severity }}</b></td>
+      <td><b>{{ r.status }}</b></td>
+      <td>{{ r.assigned_to or "-" }}</td>
+      <td>
+        <a class="nav-btn nav-secondary" href="/complaints/view/{{ r.id }}">View</a>
+        <a class="nav-btn nav-secondary" href="/complaints/view/{{ r.id }}/pdf">PDF</a>
+
+      </td>
+    </tr>
+  {% endfor %}
+  {% if rows|length == 0 %}
+    <tr><td colspan="10" style="color:#777;">No complaints found.</td></tr>
+  {% endif %}
+  </tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

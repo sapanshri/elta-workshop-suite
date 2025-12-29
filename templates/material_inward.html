@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Material Inward – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Material Inward (Job Work)</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/materials/inventory" class="nav-btn nav-secondary">📦 Inventory</a>
+</div>
+
+<form method="post" class="stacked-form">
+
+<label>Customer</label>
+<select name="customer_id" required>
+    {% for c in customers %}
+    <option value="{{ c.id }}">{{ c.customer_name }}</option>
+    {% endfor %}
+</select>
+
+<label>Customer Challan No</label>
+<input name="customer_challan_no" required>
+
+<label>Customer Challan Date</label>
+<input type="date" name="customer_challan_date" value="{{ today }}" required>
+
+<hr>
+<h2 style="margin-top:22px;">Material Details</h2>
+
+<div class="table-scroll">
+  <table class="entry-table">
+    <thead>
+      <tr>
+        <th style="width:220px;">Item Code</th>
+        <th style="width:220px;">Process</th>
+        <th style="width:120px;">Qty</th>
+        <th style="width:160px;">Box / Tray</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for i in range(8) %}
+      <tr>
+        <td>
+          <select name="item_code[]" class="cell-input">
+            <option value="">Select Item</option>
+            {% for it in item_codes %}
+              <option value="{{ it.item_code }}">{{ it.item_code }}</option>
+            {% endfor %}
+          </select>
+        </td>
+
+        <td>
+          <input name="process[]" class="cell-input" placeholder="Turning / Grinding">
+        </td>
+
+        <td>
+          <input type="number" name="qty[]" class="cell-input qty-input" min="0" placeholder="0">
+        </td>
+
+        <td>
+          <input name="box_tray[]" class="cell-input" placeholder="Box / Tray">
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="form-actions">
+  <button class="nav-btn nav-primary full-width">Save Inward</button>
+</div>
+
+
+</table>
+
+</form>
+
+</div>
+</div>
+
+</body>
+</html>
+

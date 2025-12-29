@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shift Report</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+    @media print {
+        .nav-bar { display:none; }
+        .no-print { display:none; }
+    }
+    </style>
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<div class="nav-bar no-print">
+    <a href="/shift/view" class="nav-btn nav-secondary">⬅ Back</a>
+    <button onclick="window.print()" class="nav-btn nav-primary">
+        🖨 Print / PDF
+    </button>
+</div>
+
+<h1>Shift Production Report</h1>
+
+<p>
+<b>Date:</b> {{ header.shift_date }} |
+<b>Shift:</b> {{ header.shift }} |
+<b>Incharge:</b> {{ header.shift_incharge }}
+</p>
+
+<hr>
+
+<h3>Production</h3>
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Item</th>
+    <th>Machine</th>
+    <th>Operator</th>
+    <th>OK</th>
+    <th>Reject</th>
+</tr>
+</thead>
+<tbody>
+{% for p in production %}
+<tr>
+    <td>{{ p.item_code }}</td>
+    <td>{{ p.machine }}</td>
+    <td>{{ p.operator }}</td>
+    <td>{{ p.ok_qty }}</td>
+    <td>{{ p.rej_qty }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<hr>
+
+<h3>Setup Change</h3>
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Machine</th>
+    <th>From</th>
+    <th>To</th>
+    <th>Minutes</th>
+</tr>
+</thead>
+<tbody>
+{% for s in setup %}
+<tr>
+    <td>{{ s.machine }}</td>
+    <td>{{ s.from_item }}</td>
+    <td>{{ s.to_item }}</td>
+    <td>{{ s.setup_time_min }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<hr>
+
+<h3>Attendance</h3>
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Operator</th>
+    <th>Status</th>
+</tr>
+</thead>
+<tbody>
+{% for a in attendance %}
+<tr>
+    <td>{{ a.operator }}</td>
+    <td>{{ a.status }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<hr>
+
+<h3>Downtime</h3>
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Machine</th>
+    <th>Reason</th>
+    <th>Minutes</th>
+</tr>
+</thead>
+<tbody>
+{% for d in downtime %}
+<tr>
+    <td>{{ d.machine }}</td>
+    <td>{{ d.reason }}</td>
+    <td>{{ d.minutes }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>
+

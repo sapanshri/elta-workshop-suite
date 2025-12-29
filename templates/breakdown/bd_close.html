@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Close Breakdown – ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>Close Breakdown</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">🏠 Home</a>
+  <a href="/breakdown/view/{{ row.id }}" class="nav-btn nav-secondary">Back</a>
+</div>
+
+<div style="margin-bottom:12px; color:#444;">
+  <b>Machine:</b> {{ row.machine_code }}<br>
+  <b>Date:</b> {{ row.breakdown_date }}<br>
+  <b>Start:</b> {{ row.start_time }}<br>
+  <b>Problem:</b> {{ row.problem }}
+</div>
+
+<form method="post" class="stacked-form">
+
+  <label>PIN (required)</label>
+  <input type="password" name="pin" required>
+
+  <label>End Time</label>
+  <input type="time" name="end_time" required>
+
+  <label>Root Cause (optional)</label>
+  <input name="root_cause" placeholder="Why did it happen?">
+
+  <label>Action Taken (optional)</label>
+  <input name="action_taken" placeholder="What was done to fix?">
+
+  <label>Handled By (optional)</label>
+  <input name="handled_by" value="{{ row.handled_by or '' }}" placeholder="Technician/Operator/Vendor">
+
+  <button class="nav-btn nav-primary full-width">Close Breakdown</button>
+</form>
+
+</div>
+</div>
+</body>
+</html>
+
