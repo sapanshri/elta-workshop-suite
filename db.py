@@ -1,4 +1,5 @@
 import sqlite3
+import shutil
 
 #DB_PATH = "workshop.db"
 
