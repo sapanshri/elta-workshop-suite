@@ -1,3 +1,6 @@
+import webbrowser
+import threading
+import time
 from flask import Flask, render_template, request, redirect
 from db import init_db
 from modules.tools import tools_bp
@@ -31,6 +34,10 @@ def home():
         return render_template("license.html", error=app.config["LICENSE_ERROR"])
     return render_template("home.html")
 
+def open_browser():
+    time.sleep(1.5)  # give Flask time to start
+    webbrowser.open("http://127.0.0.1:5000", new=2)
+
 app.register_blueprint(tools_bp)
 app.register_blueprint(holders_bp)
 app.register_blueprint(collets_bp)
@@ -45,4 +52,11 @@ app.register_blueprint(maintenance_bp)
 app.register_blueprint(breakdown_bp)
 app.register_blueprint(machine_history_bp)
 app.register_blueprint(complaints_bp)
+
+if __name__ == "__main__":
+    # Start browser in a background thread
+    threading.Thread(target=open_browser, daemon=True).start()
+
+    # Run Flask (NO debug mode in EXE)
+    app.run(host="127.0.0.1", port=5000, debug=False)
 
