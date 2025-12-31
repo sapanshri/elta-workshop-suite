@@ -10,8 +10,22 @@ inserts_bp = Blueprint("inserts", __name__, url_prefix="/inserts")
 @inserts_bp.route("/")
 def inserts():
     db = get_db()
-    rows = db.execute("SELECT * FROM inserts").fetchall()
+    rows = db.execute("""
+        SELECT
+            id,
+            insert_type,
+            size,
+            grade,
+            edges,
+            total_qty,
+            available_qty,
+            reorder_level,
+            remarks
+        FROM inserts
+        ORDER BY insert_type, size, grade
+    """).fetchall()
     return render_template("inserts.html", inserts=rows)
+
 
 @inserts_bp.route("/add", methods=["POST"])
 def add_insert():
