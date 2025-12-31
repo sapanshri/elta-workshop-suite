@@ -21,15 +21,38 @@
 
 <!-- ================= HOLDER ENTRY FORM ================= -->
 <form method="post" action="/holders/add" class="tool-form">
-  <input name="holder_type" placeholder="Holder Type" required>
-  <input name="interface" placeholder="BT40 / HSK63" required>
-  <input name="size" placeholder="ER32 / MT3">
-  <input name="projection" placeholder="Projection (mm)">
-  <input name="location" placeholder="Location">
-  <input name="total_qty" placeholder="Qty" required>
-  <input name="reorder_level" value="1">
-  <input name="remarks" placeholder="Remarks">
-  <button class="primary">Add / Update</button>
+
+    <!-- HOLDER TYPE DROPDOWN -->
+    <select name="holder_type" required>
+        <option value="">-- Select Holder Type --</option>
+        <option>End Mill Holder (Side Lock)</option>
+        <option>ER Collet Chuck</option>
+        <option>Hydraulic Chuck</option>
+        <option>Shrink Fit Holder</option>
+        <option>Face Mill Arbor</option>
+        <option>Shell Mill Arbor</option>
+        <option>Drill Chuck Holder</option>
+        <option>Rigid Tapping Chuck</option>
+        <option>Floating Tapping Chuck</option>
+        <option>Boring Bar Holder</option>
+        <option>Fine Boring Head</option>
+        <option>Angle Head</option>
+        <option>Quick Change Tool Holder</option>
+        <option>Modular Tool Holder</option>
+        <option>Reamer Holder</option>
+        <option>Chamfer Tool Holder</option>
+        <option>Deburring Tool Holder</option>
+    </select>
+
+    <input name="interface" placeholder="BT40 / HSK63" required>
+    <input name="size" placeholder="ER32 / MT3">
+    <input name="projection" placeholder="Projection (mm)">
+    <input name="location" placeholder="Location">
+    <input name="total_qty" placeholder="Qty" required>
+    <input name="reorder_level" value="1">
+    <input name="remarks" placeholder="Remarks">
+
+    <button class="primary">Add / Update</button>
 </form>
 
 <hr>
@@ -45,12 +68,18 @@
     <th>Location</th>
     <th>Available</th>
     <th>Reorder</th>
+    <th>Remarks</th>
 </tr>
 </thead>
 
 <tbody>
 {% for h in holders %}
 <tr>
+    <!-- Expected index mapping based on your holders.py + typical schema:
+         h[1]=holder_type, h[2]=interface, h[3]=size, h[4]=projection,
+         h[5]=location, h[8]=reorder_level, h[10]=available (computed)
+         h[6]=remarks
+    -->
     <td><strong>{{ h[1] }}</strong></td>
     <td>{{ h[2] }}</td>
     <td>{{ h[3] }}</td>
@@ -58,16 +87,20 @@
     <td>{{ h[5] }}</td>
 
     <td class="num">
-        {% if h[9] == 0 %}
+        {% set avl = (h[10] | int) %}
+        {% set rlv = (h[8] | int) %}
+
+        {% if avl == 0 %}
             <span class="stock-zero">0</span>
-        {% elif h[9] <= h[8] %}
-            <span class="stock-low">{{ h[9] }}</span>
+        {% elif avl <= rlv %}
+            <span class="stock-low">{{ avl }}</span>
         {% else %}
-            <span class="stock-ok">{{ h[9] }}</span>
+            <span class="stock-ok">{{ avl }}</span>
         {% endif %}
     </td>
 
     <td class="num">{{ h[8] }}</td>
+    <td>{{ h[6] }}</td>
 </tr>
 {% endfor %}
 </tbody>

@@ -52,12 +52,12 @@
     <td>{{ c[4] }}</td>
 
     <td class="num">
-        {% if c[8] == 0 %}
+        {% if (c[6]|int) == 0 %}
             <span class="stock-zero">0</span>
-        {% elif c[8] <= c[7] %}
-            <span class="stock-low">{{ c[8] }}</span>
+        {% elif (c[6]|int) <= (c[7]|int) %}
+            <span class="stock-low">{{ c[6] }}</span>
         {% else %}
-            <span class="stock-ok">{{ c[8] }}</span>
+            <span class="stock-ok">{{ c[6] }}</span>
         {% endif %}
     </td>
 

@@ -16,22 +16,24 @@
     <a href="/collets" class="nav-btn nav-secondary">🧲 Collets</a>
 </div>
 
-<form method="post" class="stacked-form">
+<form method="post" class="stacked-form" onsubmit="return validateQty();">
 
     <label>Issue Date</label>
     <input type="date" name="issue_date" value="{{ today }}" required>
 
     <label>Collet</label>
-    <select name="collet_id" required>
+    <select name="collet_id" id="collet_select" required>
         {% for c in collets %}
-        <option value="{{ c[0] }}">
-            {{ c[1] }} | {{ c[2] }} | {{ c[3] }}
+        <option value="{{ c[0] }}" data-avl="{{ c[6] }}">
+            {{ c[1] }} | {{ c[2] }} | {{ c[3] }} | Avl: {{ c[6] }}
         </option>
         {% endfor %}
     </select>
 
     <label>Quantity</label>
-    <input type="number" name="qty" min="1" required>
+    <input type="number" name="qty" id="qty_input" min="1" required>
+
+    <small id="avl_hint" style="opacity:0.8;"></small>
 
     <label>Operator</label>
     <input name="operator">
@@ -43,7 +45,7 @@
     <select name="shift">
         <option>A</option>
         <option>B</option>
-        
+        <option>C</option>
     </select>
 
     <button class="nav-btn nav-primary full-width">Issue Collet</button>
@@ -52,6 +54,49 @@
 
 </div>
 </div>
+
+<script>
+const colletSelect = document.getElementById("collet_select");
+const qtyInput = document.getElementById("qty_input");
+const avlHint = document.getElementById("avl_hint");
+
+function updateAvailableUI() {
+    const avl = parseInt(colletSelect.selectedOptions[0].dataset.avl || 0);
+
+    qtyInput.max = avl; // browser-level block
+    avlHint.textContent = "Available: " + avl;
+
+    // if user had entered more than available, bring it down
+    if (qtyInput.value && parseInt(qtyInput.value) > avl) {
+        qtyInput.value = avl > 0 ? avl : "";
+    }
+
+    // if no stock, disable qty input
+    qtyInput.disabled = (avl === 0);
+}
+
+function validateQty() {
+    const avl = parseInt(colletSelect.selectedOptions[0].dataset.avl || 0);
+    const qty = parseInt(qtyInput.value || 0);
+
+    if (avl === 0) {
+        alert("Selected collet has 0 available stock.");
+        return false;
+    }
+    if (qty < 1) {
+        alert("Quantity must be at least 1.");
+        return false;
+    }
+    if (qty > avl) {
+        alert("Quantity cannot be more than available (" + avl + ").");
+        return false;
+    }
+    return true;
+}
+
+colletSelect.addEventListener("change", updateAvailableUI);
+updateAvailableUI();
+</script>
 
 </body>
 </html>
