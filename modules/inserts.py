@@ -17,15 +17,16 @@ def inserts():
 def add_insert():
     db = get_db()
 
-    data = (
-        request.form["insert_type"],
-        request.form["size"],
-        request.form["grade"],
-        int(request.form["edges"]),
-        int(request.form["total_qty"]),
-        int(request.form["reorder_level"]),
-        request.form.get("remarks", "")
-    )
+    insert_type = request.form["insert_type"]
+    size = request.form["size"]
+    grade = request.form["grade"]
+    edges = int(request.form["edges"] or 0)
+    total_qty = int(request.form["total_qty"] or 0)
+    reorder_level = int(request.form.get("reorder_level", 0) or 0)
+    remarks = request.form.get("remarks", "")
+
+    # available_qty should start same as total_qty for a new add
+    available_qty = total_qty
 
     db.execute("""
         INSERT INTO inserts
@@ -35,11 +36,15 @@ def add_insert():
         ON CONFLICT(insert_type, size, grade)
         DO UPDATE SET
             total_qty = total_qty + excluded.total_qty,
-            available_qty = available_qty + excluded.total_qty
-    """, (*data, data[4]))
+            available_qty = available_qty + excluded.total_qty,
+            reorder_level = excluded.reorder_level,
+            edges = excluded.edges,
+            remarks = excluded.remarks
+    """, (insert_type, size, grade, edges, total_qty, available_qty, reorder_level, remarks))
 
     db.commit()
     return redirect("/inserts")
+
 
 # ================= ISSUE =================
 
