@@ -23,10 +23,10 @@ jobs:
           if (Test-Path "requirements.txt") { pip install -r requirements.txt }
           pip install pyinstaller
 
-      - name: Build EXE (Option A: no workshop.db bundled)
+      - name: Build EXE
         shell: pwsh
         run: |
-          pyinstaller --noconsole --onefile launcher.py `
+          pyinstaller --noconsole --onefile --name "ELTA_Workshop_Suite" launcher.py `
             --add-data "templates;templates" `
             --add-data "static;static"
 
