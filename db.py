@@ -36,23 +36,16 @@ def resource_path(rel_path: str) -> str:
     return os.path.join(os.path.abspath("."), rel_path)
 
 
-def get_db_path() -> str:
-    """
-    Ensures DB exists in user-writable folder.
-    If bundled DB exists (PyInstaller), copy it on first run.
-    """
+def get_db_path():
     data_dir = app_data_dir()
     target = os.path.join(data_dir, "workshop.db")
 
+    # Option A: never copy a bundled DB, always create/use user DB
     if not os.path.exists(target):
-        bundled = resource_path("workshop.db")
-        if os.path.exists(bundled):
-            shutil.copy2(bundled, target)
-        else:
-            # dev first-run: create empty file; schema will be created by init_db()
-            open(target, "a").close()
+        open(target, "a").close()
 
     return target
+
 
 
 DB_PATH = get_db_path()
