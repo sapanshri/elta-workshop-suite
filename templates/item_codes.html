@@ -22,19 +22,33 @@
     <th>Item Code</th>
     <th>Description</th>
     <th>Remarks</th>
+    <th>PPAP</th>
     <th>Action</th>
 </tr>
 </thead>
+
 <tbody>
 {% for i in item_codes %}
 <tr>
-    <td>{{ i.item_code }}</td>
+    <td><strong>{{ i.item_code }}</strong></td>
     <td>{{ i.description or "-" }}</td>
     <td>{{ i.remarks or "-" }}</td>
+
+    <!-- PPAP column -->
+    <td class="num">
+        {# if you pass ppap_count in query, use i.ppap_count; else show "-" #}
+        {% if i.ppap_count is defined %}
+            {{ i.ppap_count }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+
     <td>
-        <a href="/item-codes/edit/{{ i.id }}"
-           class="nav-btn nav-secondary">
-           Edit
+        <a href="/item-codes/edit/{{ i.id }}" class="nav-btn nav-secondary">Edit</a>
+
+        <a href="/item-codes/ppap/{{ i.id }}" class="nav-btn nav-success">
+            PPAP Docs
         </a>
     </td>
 </tr>

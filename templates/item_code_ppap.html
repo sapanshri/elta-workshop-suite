@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PPAP & Drawing – Item Code</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+    <h1>PPAP & Drawing Documents</h1>
+
+    <div class="nav-bar">
+        <a href="/" class="nav-btn nav-home">🏠 Home</a>
+        <a href="/item-codes" class="nav-btn nav-secondary">📦 Item Codes</a>
+        <a href="/item-codes/edit/{{ item['id'] }}" class="nav-btn nav-primary">✏️ Edit Item Code</a>
+    </div>
+
+    <div style="margin-top:12px;margin-bottom:12px;">
+        <div><strong>Item Code:</strong> {{ item['item_code'] }}</div>
+        <div><strong>Description:</strong> {{ item['description'] or "-" }}</div>
+        <div><strong>Remarks:</strong> {{ item['remarks'] or "-" }}</div>
+    </div>
+
+    <hr>
+
+    <!-- ================= UPLOAD ================= -->
+    <h2>Upload Document</h2>
+
+    <form method="post"
+      action="/item-codes/ppap/{{ item['id'] }}/upload"
+      enctype="multipart/form-data"
+      class="tool-form">
+
+    <input type="file" name="ppap_file" required>
+
+    <!-- Single dropdown: includes Drawing -->
+    <select name="doc_type" required>
+        <option value="PPAP">PPAP</option>
+        <option value="Drawing">Drawing</option>
+
+        <option value="Control Plan">Control Plan</option>
+        <option value="Process Flow">Process Flow</option>
+        <option value="PFMEA">PFMEA</option>
+        <option value="DFMEA">DFMEA</option>
+        <option value="MSA">MSA</option>
+        <option value="Gauge R&amp;R">Gauge R&amp;R</option>
+        <option value="Inspection Report">Inspection Report</option>
+        <option value="Material Cert">Material Cert</option>
+        <option value="Other">Other</option>
+    </select>
+
+    <input name="notes" placeholder="Notes (optional)">
+
+    <button class="primary">Upload (Auto Version)</button>
+</form>
+
+    <hr>
+
+    <!-- ================= DRAWINGS ================= -->
+    <h2>Drawings (Version Controlled)</h2>
+
+    <table class="inventory-table">
+        <thead>
+            <tr>
+                <th>Version</th>
+                <th>Current</th>
+                <th>File</th>
+                <th>Type</th>
+                <th>Notes</th>
+                <th>Uploaded</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% if drawing_docs and (drawing_docs|length) > 0 %}
+            {% for d in drawing_docs %}
+            <tr>
+                <td class="num">V{{ d[5] }}</td>
+                <td class="num">{% if d[6] == 1 %}<strong>YES</strong>{% else %}-{% endif %}</td>
+                <td><strong>{{ d[1] }}</strong></td>
+                <td>{{ d[2] }}</td>
+                <td>{{ d[3] or "-" }}</td>
+                <td>{{ d[4] }}</td>
+                <td>
+                    <a class="nav-btn nav-secondary" href="/item-codes/ppap-doc/{{ d[0] }}/download">Download</a>
+                    <form method="post" action="/item-codes/ppap-doc/{{ d[0] }}/delete" style="display:inline;">
+                        <button class="nav-btn nav-danger" onclick="return confirm('Delete this document?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="7" style="text-align:center;opacity:0.8;">No drawings uploaded yet.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ================= PPAP DOCS ================= -->
+    <h2>PPAP Documents (Version Controlled)</h2>
+
+    <table class="inventory-table">
+        <thead>
+            <tr>
+                <th>Version</th>
+                <th>Current</th>
+                <th>File</th>
+                <th>Type</th>
+                <th>Notes</th>
+                <th>Uploaded</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% if ppap_docs and (ppap_docs|length) > 0 %}
+            {% for p in ppap_docs %}
+            <tr>
+                <td class="num">V{{ p[5] }}</td>
+                <td class="num">{% if p[6] == 1 %}<strong>YES</strong>{% else %}-{% endif %}</td>
+                <td><strong>{{ p[1] }}</strong></td>
+                <td>{{ p[2] }}</td>
+                <td>{{ p[3] or "-" }}</td>
+                <td>{{ p[4] }}</td>
+                <td>
+                    <a class="nav-btn nav-secondary" href="/item-codes/ppap-doc/{{ p[0] }}/download">Download</a>
+                    <form method="post" action="/item-codes/ppap-doc/{{ p[0] }}/delete" style="display:inline;">
+                        <button class="nav-btn nav-danger" onclick="return confirm('Delete this document?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="7" style="text-align:center;opacity:0.8;">No PPAP documents uploaded yet.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+</div>
+</div>
+
+</body>
+</html>
+

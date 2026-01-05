@@ -19,12 +19,40 @@ from modules.machine_history import machine_history_bp
 from modules.complaints import complaints_bp
 
 import config
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+UPLOAD_ROOT = BASE_DIR / "uploads" / "ppap"   # change if you want
+
+os.makedirs(UPLOAD_ROOT, exist_ok=True)
 
 app = Flask(__name__)
+
+import os
+from pathlib import Path
+from appdirs import user_data_dir
+
+APP_NAME = "ELTA_Workshop"
+data_dir = Path(user_data_dir(APP_NAME))
+UPLOAD_ROOT = data_dir / "uploads" / "ppap"
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+
+app.config["PPAP_UPLOAD_DIR"] = str(UPLOAD_ROOT)
+
+
+app.config["PPAP_UPLOAD_DIR"] = str(UPLOAD_ROOT)
+app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB
 
 app.config["ADMIN_PIN"] = config.ADMIN_PIN
 app.config["ADMIN_PIN_1"] = config.ADMIN_PIN_1
 app.config["ADMIN_PIN_2"] = config.ADMIN_PIN_2
+
+ALLOWED_EXT = {".pdf", ".xlsx", ".xls", ".docx", ".doc", ".png", ".jpg", ".jpeg"}
+
+def allowed_file(filename: str) -> bool:
+    from pathlib import Path
+    return Path(filename).suffix.lower() in ALLOWED_EXT
 
 init_db()
 
