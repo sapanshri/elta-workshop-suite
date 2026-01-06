@@ -1,3 +1,4 @@
+#app.py
 import webbrowser
 import threading
 import time
@@ -20,22 +21,15 @@ from modules.complaints import complaints_bp
 
 import config
 import os
+from db import app_data_dir
 from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_ROOT = BASE_DIR / "uploads" / "ppap"   # change if you want
-
-os.makedirs(UPLOAD_ROOT, exist_ok=True)
 
 app = Flask(__name__)
 
 import os
 from pathlib import Path
-from appdirs import user_data_dir
 
-APP_NAME = "ELTA_Workshop"
-data_dir = Path(user_data_dir(APP_NAME))
-UPLOAD_ROOT = data_dir / "uploads" / "ppap"
+UPLOAD_ROOT = Path(app_data_dir()) / "uploads" / "ppap"
 UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
 app.config["PPAP_UPLOAD_DIR"] = str(UPLOAD_ROOT)
