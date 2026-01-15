@@ -54,5 +54,14 @@ if __name__ == "__main__":
     t.start()
 
     if not wait_for_port(HOST, PORT, timeout=15.0):
-        webview.create_window("ELTA_
+        webview.create_window("ELTA Workshop Suite", html="<h3>Server failed to start.</h3>")
+        webview.start(gui="edgechromium")
+    else:
+        webview.create_window(
+            "ELTA Workshop Suite",
+            f"http://{HOST}:{PORT}",
+            width=1200,
+            height=800,
+        )
+        webview.start(gui="edgechromium")
 
