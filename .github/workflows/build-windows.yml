@@ -1,7 +1,9 @@
-name: Build Windows EXE (PyInstaller)
+name: Build Windows onedir EXE (PyInstaller)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,7 +16,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
       - name: Install dependencies
         shell: pwsh
@@ -23,16 +25,22 @@ jobs:
           if (Test-Path "requirements.txt") { pip install -r requirements.txt }
           pip install pyinstaller
 
-      - name: Build EXE
+      - name: Build onedir app (windowed)
         shell: pwsh
         run: |
-          pyinstaller --noconsole --onefile --name "ELTA_Workshop_Suite" launcher.py `
+          pyinstaller `
+            --noconfirm `
+            --clean `
+            --onedir `
+            --windowed `
+            --name "ELTA_Workshop_Suite" `
             --add-data "templates;templates" `
-            --add-data "static;static"
+            --add-data "static;static" `
+            desktop_main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ELTA_Workshop_Suite_Windows_EXE
-          path: dist/*.exe
+          name: ELTA_Workshop_Suite_Windows_onedir
+          path: dist/ELTA_Workshop_Suite
 

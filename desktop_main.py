@@ -1,12 +1,21 @@
 import threading
 import time
 import socket
+import sys
 import webview
 
-from app import app  # <-- your existing Flask instance (app = Flask(__name__))
+from app import app
 
 HOST = "127.0.0.1"
-PORT = 5000
+
+
+def get_free_port(host=HOST):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((host, 0))  # 0 => any free port
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
 
 def wait_for_port(host, port, timeout=10.0):
     start = time.time()
@@ -18,26 +27,32 @@ def wait_for_port(host, port, timeout=10.0):
             time.sleep(0.1)
     return False
 
-def run_server():
-    # IMPORTANT: no reloader in packaged EXE
-    # Use a production server so it behaves consistently
+
+def ensure_single_instance(host="127.0.0.1", port=45454):
+    """
+    Prevent double-launch.
+    Keep returned socket open for app lifetime.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((host, port))
+        return s
+    except OSError:
+        sys.exit(0)
+
+
+def run_server(host, port):
     from waitress import serve
-    serve(app, host=HOST, port=PORT, threads=8)
+    serve(app, host=host, port=port, threads=8)
+
 
 if __name__ == "__main__":
-    t = threading.Thread(target=run_server, daemon=True)
+    _lock = ensure_single_instance()
+    PORT = get_free_port()
+
+    t = threading.Thread(target=run_server, args=(HOST, PORT), daemon=True)
     t.start()
 
     if not wait_for_port(HOST, PORT, timeout=15.0):
-        # If server didn't start, show an error window
-        webview.create_window("ELTA Workshop Suite", html="<h3>Server failed to start.</h3>")
-        webview.start()
-    else:
-        webview.create_window(
-            "ELTA Workshop Suite",
-            f"http://{HOST}:{PORT}",
-            width=1200,
-            height=800,
-        )
-        webview.start()
+        webview.create_window("ELTA_
 
