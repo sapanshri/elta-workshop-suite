@@ -116,38 +116,54 @@ def edge_used():
     db.commit()
     return redirect("/inserts")
 
-# ================= SCRAP =================
+from datetime import date
+from flask import request, redirect, render_template
 
 @inserts_bp.route("/scrap", methods=["GET", "POST"])
 def scrap_insert():
     db = get_db()
 
     if request.method == "POST":
+        insert_id = request.form.get("insert_id")
+        qty = request.form.get("qty")
+        operator = request.form.get("operator", "")
+        txn_date = request.form.get("txn_date")  # <-- matches HTML
+
+        if not insert_id or not qty or not txn_date:
+            return "Missing required fields", 400
+
+        try:
+            qty_i = int(qty)
+        except ValueError:
+            return "Invalid qty", 400
+
         db.execute("""
             INSERT INTO insert_txn
             (insert_id, action, qty, operator, machine, job, shift, txn_date)
             VALUES (?, 'SCRAP', ?, ?, ?, ?, ?, ?)
         """, (
-            request.form["insert_id"],
-            request.form["qty"],
-            request.form["operator"],
-            request.form["machine"],
-            request.form["job"],
-            request.form["shift"],
-            request.form["scrap_date"]
+            insert_id,
+            qty_i,
+            operator,
+            "",   # machine
+            "",   # job
+            "",   # shift
+            txn_date
         ))
 
         db.execute("""
             UPDATE inserts
             SET available_qty = available_qty - ?
             WHERE id = ?
-        """, (request.form["qty"], request.form["insert_id"]))
+        """, (qty_i, insert_id))
 
         db.commit()
         return redirect("/inserts")
 
     rows = db.execute("SELECT * FROM inserts").fetchall()
     return render_template("insert_scrap.html", inserts=rows, today=date.today())
+
+
 
 # ================= HISTORY =================
 
