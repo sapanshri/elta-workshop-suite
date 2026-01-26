@@ -50,11 +50,19 @@ if __name__ == "__main__":
     _lock = ensure_single_instance()
     PORT = get_free_port()
 
+    # ✅ REQUIRED FOR PDF / CSV / EXCEL DOWNLOADS
+    webview.settings = {
+        "ALLOW_DOWNLOADS": True,
+    }
+
     t = threading.Thread(target=run_server, args=(HOST, PORT), daemon=True)
     t.start()
 
     if not wait_for_port(HOST, PORT, timeout=15.0):
-        webview.create_window("ELTA Workshop Suite", html="<h3>Server failed to start.</h3>")
+        webview.create_window(
+            "ELTA Workshop Suite",
+            html="<h3>Server failed to start.</h3>"
+        )
         webview.start(gui="edgechromium")
     else:
         webview.create_window(
