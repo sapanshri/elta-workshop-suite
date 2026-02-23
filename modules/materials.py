@@ -400,6 +400,15 @@ def inventory_pdf():
 
     rows = db.execute(query, params).fetchall()
 
+    def pdf_text(value, max_len=26):
+        # ReportLab drawString requires text; normalize None/numeric values safely.
+        if value is None:
+            return ""
+        text = str(value)
+        if len(text) > max_len:
+            return text[: max_len - 3] + "..."
+        return text
+
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -428,13 +437,13 @@ def inventory_pdf():
             pdf.setFont("Helvetica", 9)
             y = height - 50
 
-        pdf.drawString(x[0], y, r["customer_name"])
-        pdf.drawString(x[1], y, r["customer_challan_no"])
-        pdf.drawString(x[2], y, r["status"] or "")
-        pdf.drawString(x[3], y, r["item_code"])
-        pdf.drawString(x[4], y, r["process"] or "")
-        pdf.drawString(x[5], y, str(r["inward_qty"]))
-        pdf.drawString(x[6], y, str(r["available_qty"]))
+        pdf.drawString(x[0], y, pdf_text(r["customer_name"], 18))
+        pdf.drawString(x[1], y, pdf_text(r["customer_challan_no"], 14))
+        pdf.drawString(x[2], y, pdf_text(r["status"], 10))
+        pdf.drawString(x[3], y, pdf_text(r["item_code"], 12))
+        pdf.drawString(x[4], y, pdf_text(r["process"], 12))
+        pdf.drawString(x[5], y, pdf_text(r["inward_qty"], 8))
+        pdf.drawString(x[6], y, pdf_text(r["available_qty"], 8))
         y -= 14
 
     pdf.save()
@@ -778,4 +787,3 @@ def dispatch_product_items():
         }
         for r in rows
     ])
-

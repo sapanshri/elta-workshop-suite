@@ -79,7 +79,7 @@
 </div>
 
 </form>
-<form method="get" action="/materials/inventory/pdf"
+<form method="get" action="{{ url_for('materials.inventory_pdf') }}"
       style="margin-bottom:15px;">
 
     <!-- Pass current filters to PDF -->
@@ -98,7 +98,7 @@
     <input type="hidden" name="to_date"
            value="{{ request.args.get('to_date','') }}">
 
-    <button class="nav-btn nav-secondary">
+    <button type="submit" class="nav-btn nav-secondary">
         📄 Export to PDF
     </button>
 </form>
@@ -160,4 +160,3 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
-
