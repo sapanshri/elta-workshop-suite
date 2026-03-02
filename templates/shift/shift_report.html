@@ -15,6 +15,8 @@
     <a href="/" class="nav-btn nav-home">🏠 Home</a>
     <a href="/shift/add" class="nav-btn nav-primary">➕ New Shift</a>
     <a href="/shift/view" class="nav-btn nav-secondary">📋 Shift Entries</a>
+    <a href="/shift/report/excel?machine_code={{ machine_code }}&date_range={{ date_range }}&from_date={{ from_date }}&to_date={{ to_date }}&shift={{ shift }}"
+       class="nav-btn nav-secondary">📊 Export to Excel</a>
 </div>
 
 <form method="get" class="stacked-form" style="margin-bottom:15px;">
@@ -66,8 +68,7 @@
     <th>Shift</th>
     <th>Machine</th>
     <th>Machine Name</th>
-    <th>Line Items</th>
-    <th>Item Count</th>
+    <th>Item Codes</th>
     <th>OK Qty</th>
     <th>Reject Qty</th>
     <th>Total Qty</th>
@@ -80,8 +81,7 @@
     <td>{{ r.shift }}</td>
     <td>{{ r.machine_code }}</td>
     <td>{{ r.machine_name }}</td>
-    <td class="num">{{ r.line_count }}</td>
-    <td class="num">{{ r.item_count }}</td>
+    <td>{{ r.item_codes }}</td>
     <td class="num">{{ r.ok_qty }}</td>
     <td class="num">{{ r.rej_qty }}</td>
     <td class="num"><b>{{ r.total_qty }}</b></td>
@@ -90,7 +90,7 @@
 </tbody>
 <tfoot>
 <tr>
-    <th colspan="6" style="text-align:right;">Grand Total</th>
+    <th colspan="5" style="text-align:right;">Grand Total</th>
     <th class="num">{{ summary.ok_qty }}</th>
     <th class="num">{{ summary.rej_qty }}</th>
     <th class="num">{{ summary.total_qty }}</th>
