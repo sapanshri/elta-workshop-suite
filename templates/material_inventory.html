@@ -110,10 +110,22 @@
     <th>Customer</th>
     <th>Challan</th>
     <th>Status</th>
+    {% if request.args.get('status') == 'CLOSED' %}
+    <th>ELTA Challan</th>
+    <th>Dispatch Date</th>
+    {% endif %}
     <th>Item Code</th>
     <th>Process</th>
     <th>Inward Qty</th>
     <th>Available Qty</th>
+    {% if request.args.get('status') == 'CLOSED' %}
+    <th>OK</th>
+    <th>Rej</th>
+    <th>C/D</th>
+    <th>N/D</th>
+    <th>N/D PW</th>
+    <th>Total Dispatch</th>
+    {% endif %}
 </tr>
 </thead>
 <tbody>
@@ -122,10 +134,22 @@
     <td>{{ r.customer_name }}</td>
     <td>{{ r.customer_challan_no }}</td>
     <td>{{ r.status }}</td>
+    {% if request.args.get('status') == 'CLOSED' %}
+    <td>{{ r.elta_challan_no }}</td>
+    <td>{{ r.dispatch_date }}</td>
+    {% endif %}
     <td>{{ r.item_code }}</td>
     <td>{{ r.process }}</td>
     <td>{{ r.inward_qty }}</td>
     <td><b>{{ r.available_qty }}</b></td>
+    {% if request.args.get('status') == 'CLOSED' %}
+    <td>{{ r.ok_qty }}</td>
+    <td>{{ r.rej_qty }}</td>
+    <td>{{ r.cd_qty }}</td>
+    <td>{{ r.nd_qty }}</td>
+    <td>{{ r.nd_pw_qty }}</td>
+    <td><b>{{ r.total_qty }}</b></td>
+    {% endif %}
 </tr>
 {% endfor %}
 </tbody>

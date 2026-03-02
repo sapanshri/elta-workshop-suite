@@ -282,19 +282,55 @@ def inventory():
     to_date = request.args.get("to_date", "")
 
 
-    query = """
-        SELECT c.customer_name,
-               ch.customer_challan_no,
-               ch.status,
-               mi.item_code,
-               mi.process,
-               mi.inward_qty,
-               mi.available_qty
-        FROM material_inward mi
-        JOIN customer_challan ch ON ch.id = mi.challan_id
-        JOIN customer_master c ON c.id = ch.customer_id
-        WHERE 1=1
-    """
+    closed_mode = (status == "CLOSED")
+
+    if closed_mode:
+        query = """
+            SELECT
+                c.customer_name,
+                ch.customer_challan_no,
+                ch.status,
+                md.dispatch_date,
+                md.elta_challan_no,
+                mi.item_code,
+                mi.process,
+                mi.inward_qty,
+                mi.available_qty,
+                md.ok_qty,
+                md.rej_qty,
+                md.cd_qty,
+                md.nd_qty,
+                md.nd_pw_qty,
+                md.total_qty
+            FROM material_dispatch md
+            JOIN material_inward mi ON mi.id = md.inward_id
+            JOIN customer_challan ch ON ch.id = md.challan_id
+            JOIN customer_master c ON c.id = ch.customer_id
+            WHERE 1=1
+        """
+    else:
+        query = """
+            SELECT
+                c.customer_name,
+                ch.customer_challan_no,
+                ch.status,
+                NULL AS dispatch_date,
+                '' AS elta_challan_no,
+                mi.item_code,
+                mi.process,
+                mi.inward_qty,
+                mi.available_qty,
+                0 AS ok_qty,
+                0 AS rej_qty,
+                0 AS cd_qty,
+                0 AS nd_qty,
+                0 AS nd_pw_qty,
+                0 AS total_qty
+            FROM material_inward mi
+            JOIN customer_challan ch ON ch.id = mi.challan_id
+            JOIN customer_master c ON c.id = ch.customer_id
+            WHERE 1=1
+        """
     params = []
 
     if customer_id:
@@ -309,20 +345,19 @@ def inventory():
         query += " AND ch.status=?"
         params.append(status)
 
-        # CLOSED challans filtered by ELTA dispatch date
-        if status == "CLOSED" and from_date and to_date:
-            query += """
-                AND EXISTS (
-                    SELECT 1 FROM material_dispatch md
-                    WHERE md.challan_id = ch.id
-                      AND md.dispatch_date BETWEEN ? AND ?
-                )
-            """
+        # For closed mode, date filter applies directly on dispatch rows.
+        if closed_mode and from_date and to_date:
+            query += " AND md.dispatch_date BETWEEN ? AND ?"
             params.extend([from_date, to_date])
 
-    query += """
-        ORDER BY c.customer_name, ch.customer_challan_no, mi.item_code
-    """
+    if closed_mode:
+        query += """
+            ORDER BY c.customer_name, ch.customer_challan_no, md.dispatch_date DESC, mi.item_code
+        """
+    else:
+        query += """
+            ORDER BY c.customer_name, ch.customer_challan_no, mi.item_code
+        """
 
     rows = db.execute(query, params).fetchall()
 
