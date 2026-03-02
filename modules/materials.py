@@ -4,6 +4,7 @@ from datetime import date
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 import io
+import csv
 from flask import jsonify
 
 
@@ -30,6 +31,88 @@ def calc_total_dispatch(form):
         int(form.get("nd_qty", 0) or 0) +
         int(form.get("nd_pw_qty", 0) or 0)
     )
+
+
+def load_inventory_rows(db, customer_id="", item_code="", status="", from_date="", to_date=""):
+    closed_mode = (status == "CLOSED")
+
+    if closed_mode:
+        query = """
+            SELECT
+                c.customer_name,
+                ch.customer_challan_no,
+                ch.status,
+                md.dispatch_date,
+                md.elta_challan_no,
+                mi.item_code,
+                mi.process,
+                mi.inward_qty,
+                mi.available_qty,
+                md.ok_qty,
+                md.rej_qty,
+                md.cd_qty,
+                md.nd_qty,
+                md.nd_pw_qty,
+                md.total_qty
+            FROM material_dispatch md
+            JOIN material_inward mi ON mi.id = md.inward_id
+            JOIN customer_challan ch ON ch.id = md.challan_id
+            JOIN customer_master c ON c.id = ch.customer_id
+            WHERE 1=1
+        """
+    else:
+        query = """
+            SELECT
+                c.customer_name,
+                ch.customer_challan_no,
+                ch.status,
+                NULL AS dispatch_date,
+                '' AS elta_challan_no,
+                mi.item_code,
+                mi.process,
+                mi.inward_qty,
+                mi.available_qty,
+                0 AS ok_qty,
+                0 AS rej_qty,
+                0 AS cd_qty,
+                0 AS nd_qty,
+                0 AS nd_pw_qty,
+                0 AS total_qty
+            FROM material_inward mi
+            JOIN customer_challan ch ON ch.id = mi.challan_id
+            JOIN customer_master c ON c.id = ch.customer_id
+            WHERE 1=1
+        """
+
+    params = []
+
+    if customer_id:
+        query += " AND c.id=?"
+        params.append(customer_id)
+
+    if item_code:
+        query += " AND mi.item_code=?"
+        params.append(item_code)
+
+    if status:
+        query += " AND ch.status=?"
+        params.append(status)
+
+        if closed_mode and from_date and to_date:
+            query += " AND md.dispatch_date BETWEEN ? AND ?"
+            params.extend([from_date, to_date])
+
+    if closed_mode:
+        query += """
+            ORDER BY c.customer_name, ch.customer_challan_no, md.dispatch_date DESC, mi.item_code
+        """
+    else:
+        query += """
+            ORDER BY c.customer_name, ch.customer_challan_no, mi.item_code
+        """
+
+    rows = db.execute(query, params).fetchall()
+    return rows, closed_mode
 
 
 # ================= INWARD ENTRY =================
@@ -282,84 +365,7 @@ def inventory():
     to_date = request.args.get("to_date", "")
 
 
-    closed_mode = (status == "CLOSED")
-
-    if closed_mode:
-        query = """
-            SELECT
-                c.customer_name,
-                ch.customer_challan_no,
-                ch.status,
-                md.dispatch_date,
-                md.elta_challan_no,
-                mi.item_code,
-                mi.process,
-                mi.inward_qty,
-                mi.available_qty,
-                md.ok_qty,
-                md.rej_qty,
-                md.cd_qty,
-                md.nd_qty,
-                md.nd_pw_qty,
-                md.total_qty
-            FROM material_dispatch md
-            JOIN material_inward mi ON mi.id = md.inward_id
-            JOIN customer_challan ch ON ch.id = md.challan_id
-            JOIN customer_master c ON c.id = ch.customer_id
-            WHERE 1=1
-        """
-    else:
-        query = """
-            SELECT
-                c.customer_name,
-                ch.customer_challan_no,
-                ch.status,
-                NULL AS dispatch_date,
-                '' AS elta_challan_no,
-                mi.item_code,
-                mi.process,
-                mi.inward_qty,
-                mi.available_qty,
-                0 AS ok_qty,
-                0 AS rej_qty,
-                0 AS cd_qty,
-                0 AS nd_qty,
-                0 AS nd_pw_qty,
-                0 AS total_qty
-            FROM material_inward mi
-            JOIN customer_challan ch ON ch.id = mi.challan_id
-            JOIN customer_master c ON c.id = ch.customer_id
-            WHERE 1=1
-        """
-    params = []
-
-    if customer_id:
-        query += " AND c.id=?"
-        params.append(customer_id)
-
-    if item_code:
-        query += " AND mi.item_code=?"
-        params.append(item_code)
-
-    if status:
-        query += " AND ch.status=?"
-        params.append(status)
-
-        # For closed mode, date filter applies directly on dispatch rows.
-        if closed_mode and from_date and to_date:
-            query += " AND md.dispatch_date BETWEEN ? AND ?"
-            params.extend([from_date, to_date])
-
-    if closed_mode:
-        query += """
-            ORDER BY c.customer_name, ch.customer_challan_no, md.dispatch_date DESC, mi.item_code
-        """
-    else:
-        query += """
-            ORDER BY c.customer_name, ch.customer_challan_no, mi.item_code
-        """
-
-    rows = db.execute(query, params).fetchall()
+    rows, _ = load_inventory_rows(db, customer_id, item_code, status, from_date, to_date)
 
     customers = db.execute("""
         SELECT id, customer_name
@@ -393,47 +399,7 @@ def inventory_pdf():
     from_date = request.args.get("from_date", "")
     to_date = request.args.get("to_date", "")
 
-    query = """
-        SELECT c.customer_name,
-               ch.customer_challan_no,
-               ch.status,
-               mi.item_code,
-               mi.process,
-               mi.inward_qty,
-               mi.available_qty
-        FROM material_inward mi
-        JOIN customer_challan ch ON ch.id = mi.challan_id
-        JOIN customer_master c ON c.id = ch.customer_id
-        WHERE 1=1
-    """
-    params = []
-
-    if customer_id:
-        query += " AND c.id=?"
-        params.append(customer_id)
-
-    if item_code:
-        query += " AND mi.item_code=?"
-        params.append(item_code)
-
-    if status:
-        query += " AND ch.status=?"
-        params.append(status)
-
-        # MUST MATCH inventory() exists filter
-        if status == "CLOSED" and from_date and to_date:
-            query += """
-                AND EXISTS (
-                    SELECT 1 FROM material_dispatch md
-                    WHERE md.challan_id = ch.id
-                      AND md.dispatch_date BETWEEN ? AND ?
-                )
-            """
-            params.extend([from_date, to_date])
-
-    query += " ORDER BY c.customer_name, ch.customer_challan_no, mi.item_code"
-
-    rows = db.execute(query, params).fetchall()
+    rows, closed_mode = load_inventory_rows(db, customer_id, item_code, status, from_date, to_date)
 
     def pdf_text(value, max_len=26):
         # ReportLab drawString requires text; normalize None/numeric values safely.
@@ -456,8 +422,12 @@ def inventory_pdf():
 
     y = height - 90
 
-    headers = ["Customer", "Challan", "Status", "Item", "Process", "Inward", "Available"]
-    x = [40, 140, 220, 280, 350, 420, 470]
+    if closed_mode:
+        headers = ["Customer", "ELTA Ch.", "Date", "Item", "Proc", "OK", "REJ", "C/D", "N/D", "N/D PW", "Total"]
+        x = [30, 90, 145, 200, 255, 295, 330, 365, 400, 435, 490]
+    else:
+        headers = ["Customer", "Challan", "Status", "Item", "Process", "Inward", "Available"]
+        x = [40, 140, 220, 280, 350, 420, 470]
 
     pdf.setFont("Helvetica-Bold", 9)
     for i, h in enumerate(headers):
@@ -472,13 +442,26 @@ def inventory_pdf():
             pdf.setFont("Helvetica", 9)
             y = height - 50
 
-        pdf.drawString(x[0], y, pdf_text(r["customer_name"], 18))
-        pdf.drawString(x[1], y, pdf_text(r["customer_challan_no"], 14))
-        pdf.drawString(x[2], y, pdf_text(r["status"], 10))
-        pdf.drawString(x[3], y, pdf_text(r["item_code"], 12))
-        pdf.drawString(x[4], y, pdf_text(r["process"], 12))
-        pdf.drawString(x[5], y, pdf_text(r["inward_qty"], 8))
-        pdf.drawString(x[6], y, pdf_text(r["available_qty"], 8))
+        if closed_mode:
+            pdf.drawString(x[0], y, pdf_text(r["customer_name"], 10))
+            pdf.drawString(x[1], y, pdf_text(r["elta_challan_no"], 8))
+            pdf.drawString(x[2], y, pdf_text(r["dispatch_date"], 10))
+            pdf.drawString(x[3], y, pdf_text(r["item_code"], 8))
+            pdf.drawString(x[4], y, pdf_text(r["process"], 6))
+            pdf.drawString(x[5], y, pdf_text(r["ok_qty"], 4))
+            pdf.drawString(x[6], y, pdf_text(r["rej_qty"], 4))
+            pdf.drawString(x[7], y, pdf_text(r["cd_qty"], 4))
+            pdf.drawString(x[8], y, pdf_text(r["nd_qty"], 4))
+            pdf.drawString(x[9], y, pdf_text(r["nd_pw_qty"], 5))
+            pdf.drawString(x[10], y, pdf_text(r["total_qty"], 5))
+        else:
+            pdf.drawString(x[0], y, pdf_text(r["customer_name"], 18))
+            pdf.drawString(x[1], y, pdf_text(r["customer_challan_no"], 14))
+            pdf.drawString(x[2], y, pdf_text(r["status"], 10))
+            pdf.drawString(x[3], y, pdf_text(r["item_code"], 12))
+            pdf.drawString(x[4], y, pdf_text(r["process"], 12))
+            pdf.drawString(x[5], y, pdf_text(r["inward_qty"], 8))
+            pdf.drawString(x[6], y, pdf_text(r["available_qty"], 8))
         y -= 14
 
     pdf.save()
@@ -489,6 +472,90 @@ def inventory_pdf():
         as_attachment=True,
         download_name="material_inventory.pdf",
         mimetype="application/pdf"
+    )
+
+
+@materials_bp.route("/inventory/excel")
+def inventory_excel():
+    db = get_db()
+
+    customer_id = request.args.get("customer_id", "")
+    item_code = request.args.get("item_code", "")
+    status = request.args.get("status", "")
+    from_date = request.args.get("from_date", "")
+    to_date = request.args.get("to_date", "")
+
+    rows, closed_mode = load_inventory_rows(db, customer_id, item_code, status, from_date, to_date)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    if closed_mode:
+        writer.writerow([
+            "Customer",
+            "Customer Challan",
+            "Status",
+            "ELTA Challan",
+            "Dispatch Date",
+            "Item Code",
+            "Process",
+            "Inward Qty",
+            "Available Qty",
+            "OK Qty",
+            "Reject Qty",
+            "C/D Qty",
+            "N/D Qty",
+            "N/D PW Qty",
+            "Total Dispatch Qty",
+        ])
+        for r in rows:
+            writer.writerow([
+                r["customer_name"],
+                r["customer_challan_no"],
+                r["status"],
+                r["elta_challan_no"],
+                r["dispatch_date"],
+                r["item_code"],
+                r["process"],
+                r["inward_qty"],
+                r["available_qty"],
+                r["ok_qty"],
+                r["rej_qty"],
+                r["cd_qty"],
+                r["nd_qty"],
+                r["nd_pw_qty"],
+                r["total_qty"],
+            ])
+    else:
+        writer.writerow([
+            "Customer",
+            "Customer Challan",
+            "Status",
+            "Item Code",
+            "Process",
+            "Inward Qty",
+            "Available Qty",
+        ])
+        for r in rows:
+            writer.writerow([
+                r["customer_name"],
+                r["customer_challan_no"],
+                r["status"],
+                r["item_code"],
+                r["process"],
+                r["inward_qty"],
+                r["available_qty"],
+            ])
+
+    data = output.getvalue().encode("utf-8-sig")
+    buf = io.BytesIO(data)
+    buf.seek(0)
+
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="material_inventory.csv",
+        mimetype="text/csv; charset=utf-8"
     )
 
 

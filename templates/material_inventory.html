@@ -79,29 +79,14 @@
 </div>
 
 </form>
-<form method="get" action="{{ url_for('materials.inventory_pdf') }}"
-      style="margin-bottom:15px;">
-
-    <!-- Pass current filters to PDF -->
-    <input type="hidden" name="customer_id"
-           value="{{ request.args.get('customer_id','') }}">
-
-    <input type="hidden" name="item_code"
-           value="{{ request.args.get('item_code','') }}">
-
-    <input type="hidden" name="status"
-           value="{{ request.args.get('status','') }}">
-
-    <input type="hidden" name="from_date"
-           value="{{ request.args.get('from_date','') }}">
-
-    <input type="hidden" name="to_date"
-           value="{{ request.args.get('to_date','') }}">
-
-    <button type="submit" class="nav-btn nav-secondary">
+<div style="display:flex; gap:10px; margin-bottom:15px;">
+    <button type="button" class="nav-btn nav-secondary" onclick="downloadInventoryExport('pdf')">
         📄 Export to PDF
     </button>
-</form>
+    <button type="button" class="nav-btn nav-secondary" onclick="downloadInventoryExport('excel')">
+        📊 Export to Excel
+    </button>
+</div>
 
 
 <table class="inventory-table">
@@ -168,6 +153,39 @@ function toggleClosedDateFilters() {
         dateBox.style.display = "block";
     } else {
         dateBox.style.display = "none";
+    }
+}
+
+async function downloadInventoryExport(kind) {
+    const qs = window.location.search || "";
+    const url = `/materials/inventory/${kind}${qs}`;
+
+    try {
+        const resp = await fetch(url, { credentials: "same-origin" });
+        if (!resp.ok) {
+            alert(`Export failed (${resp.status})`);
+            return;
+        }
+
+        const blob = await resp.blob();
+        const objectUrl = URL.createObjectURL(blob);
+
+        let filename = kind === "excel" ? "material_inventory.csv" : "material_inventory.pdf";
+        const cd = resp.headers.get("Content-Disposition") || "";
+        const m = cd.match(/filename\\*?=(?:UTF-8''|\"?)([^\";]+)/i);
+        if (m && m[1]) {
+            filename = decodeURIComponent(m[1].replace(/\"/g, "").trim());
+        }
+
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+    } catch (e) {
+        alert("Export failed. Please try again.");
     }
 }
 
