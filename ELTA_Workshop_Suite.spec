@@ -5,7 +5,7 @@ a = Analysis(
     ['run_suite.py'],
     pathex=[],
     binaries=[],
-    datas=[('templates', 'templates'), ('static', 'static'), ('workshop.db', 'workshop.db')],
+    datas=[('templates', 'templates'), ('static', 'static'), ('workshop.db', 'workshop.db'), ('backup_config.json.example', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

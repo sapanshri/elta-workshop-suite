@@ -36,6 +36,7 @@ jobs:
             --name "ELTA_Workshop_Suite" `
             --add-data "templates;templates" `
             --add-data "static;static" `
+            --add-data "backup_config.json.example;." `
             desktop_main.py
 
       - name: Upload artifact
@@ -43,4 +44,3 @@ jobs:
         with:
           name: ELTA_Workshop_Suite_Windows_onedir
           path: dist/ELTA_Workshop_Suite
-

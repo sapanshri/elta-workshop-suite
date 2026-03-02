@@ -2,9 +2,13 @@ import threading
 import time
 import socket
 import sys
+import json
+from datetime import date
+from pathlib import Path
 import webview
 
 from app import app
+from db import app_data_dir
 
 HOST = "127.0.0.1"
 
@@ -46,9 +50,49 @@ def run_server(host, port):
     serve(app, host=host, port=port, threads=8)
 
 
+def _backup_state_file() -> Path:
+    return Path(app_data_dir()) / "backup_state.json"
+
+
+def _already_backed_up_today() -> bool:
+    p = _backup_state_file()
+    if not p.exists():
+        return False
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    return data.get("last_success_date") == date.today().isoformat()
+
+
+def _mark_backup_success_today() -> None:
+    p = _backup_state_file()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        json.dumps({"last_success_date": date.today().isoformat()}, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _run_daily_backup_async():
+    def _worker():
+        try:
+            from db_backup_to_ec2 import run_backup
+            code = run_backup(dry_run=False)
+            if code == 0:
+                _mark_backup_success_today()
+        except Exception as e:
+            print(f"[backup] failed: {e}", file=sys.stderr)
+
+    if _already_backed_up_today():
+        return
+    threading.Thread(target=_worker, daemon=True).start()
+
+
 if __name__ == "__main__":
     _lock = ensure_single_instance()
     PORT = get_free_port()
+    _run_daily_backup_async()
 
     # ✅ REQUIRED FOR PDF / CSV / EXCEL DOWNLOADS
     webview.settings = {
@@ -72,4 +116,3 @@ if __name__ == "__main__":
             height=800,
         )
         webview.start(gui="edgechromium")
-

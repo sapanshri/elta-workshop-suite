@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "local_backup_dir": "",
+  "keep_local_days": 7,
+  "keep_remote_days": 30,
+  "ec2_host": "13.48.64.104",
+  "ec2_user": "ubuntu",
+  "ssh_key_file": "/home/sapan/Documents/Incoming/AWS_Key.pem",
+  "ssh_port": 22,
+  "remote_backup_dir": "/home/ubuntu/elta_workshop_db_backups"
+}
