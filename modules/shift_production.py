@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, abort
 from db import get_db
-from datetime import date
+from datetime import date, timedelta
 from db import fetch_active_machines
 
 shift_bp = Blueprint("shift", __name__, url_prefix="/shift")
@@ -212,3 +212,107 @@ def shift_detail(shift_id):
 @shift_bp.route("/view/")
 def shift_view_slash_redirect():
     return redirect("/shift/view")
+
+
+# ================= MACHINE WORK REPORT =================
+
+@shift_bp.route("/report")
+def shift_machine_report():
+    db = get_db()
+
+    today = date.today()
+    date_range = (request.args.get("date_range") or "last_7").strip()
+
+    if date_range == "today":
+        from_date = today.isoformat()
+        to_date = today.isoformat()
+    elif date_range == "last_15":
+        from_date = (today - timedelta(days=14)).isoformat()
+        to_date = today.isoformat()
+    elif date_range == "last_30":
+        from_date = (today - timedelta(days=29)).isoformat()
+        to_date = today.isoformat()
+    elif date_range == "this_month":
+        from_date = today.replace(day=1).isoformat()
+        to_date = today.isoformat()
+    elif date_range == "custom":
+        from_date = (request.args.get("from_date") or (today - timedelta(days=6)).isoformat()).strip()
+        to_date = (request.args.get("to_date") or today.isoformat()).strip()
+    else:
+        # default: last_7
+        date_range = "last_7"
+        from_date = (today - timedelta(days=6)).isoformat()
+        to_date = today.isoformat()
+
+    shift = (request.args.get("shift") or "").strip()
+    machine_code = (request.args.get("machine_code") or "").strip()
+
+    query = """
+        SELECT
+            sh.shift_date,
+            sh.shift,
+            sp.machine AS machine_code,
+            COALESCE(mm.machine_name, '') AS machine_name,
+            COUNT(*) AS line_count,
+            COUNT(DISTINCT sp.item_code) AS item_count,
+            SUM(COALESCE(sp.ok_qty, 0)) AS ok_qty,
+            SUM(COALESCE(sp.rej_qty, 0)) AS rej_qty,
+            SUM(COALESCE(sp.ok_qty, 0) + COALESCE(sp.rej_qty, 0)) AS total_qty
+        FROM shift_production sp
+        JOIN shift_header sh ON sh.id = sp.shift_id
+        LEFT JOIN machine_master mm ON mm.machine_code = sp.machine
+        WHERE sp.machine IS NOT NULL
+          AND sp.machine != ''
+          AND date(sh.shift_date) BETWEEN date(?) AND date(?)
+    """
+    params = [from_date, to_date]
+
+    if shift:
+        query += " AND sh.shift = ?"
+        params.append(shift)
+
+    if machine_code:
+        query += " AND sp.machine = ?"
+        params.append(machine_code)
+
+    query += """
+        GROUP BY sh.shift_date, sh.shift, sp.machine, mm.machine_name
+        ORDER BY date(sh.shift_date) DESC, sh.shift, sp.machine
+    """
+
+    rows = db.execute(query, params).fetchall()
+
+    summary = db.execute("""
+        SELECT
+            COALESCE(SUM(ok_qty), 0) AS ok_qty,
+            COALESCE(SUM(rej_qty), 0) AS rej_qty,
+            COALESCE(SUM(total_qty), 0) AS total_qty
+        FROM (
+            SELECT
+                SUM(COALESCE(sp.ok_qty, 0)) AS ok_qty,
+                SUM(COALESCE(sp.rej_qty, 0)) AS rej_qty,
+                SUM(COALESCE(sp.ok_qty, 0) + COALESCE(sp.rej_qty, 0)) AS total_qty
+            FROM shift_production sp
+            JOIN shift_header sh ON sh.id = sp.shift_id
+            WHERE sp.machine IS NOT NULL
+              AND sp.machine != ''
+              AND date(sh.shift_date) BETWEEN date(?) AND date(?)
+              AND (? = '' OR sh.shift = ?)
+              AND (? = '' OR sp.machine = ?)
+            GROUP BY sh.shift_date, sh.shift, sp.machine
+        ) x
+    """, (from_date, to_date, shift, shift, machine_code, machine_code)).fetchone()
+
+    machines = fetch_active_machines(db)
+
+    return render_template(
+        "shift/shift_report.html",
+        rows=rows,
+        machines=machines,
+        summary=summary,
+        date_range=date_range,
+        from_date=from_date,
+        to_date=to_date,
+        shift=shift,
+        machine_code=machine_code
+    )

@@ -1,0 +1,46 @@
+{
+  "roles": {
+    "Admin": [
+      "*"
+    ],
+    "Production": [
+      "dashboard",
+      "tool_crib",
+      "material",
+      "production",
+      "maintenance"
+    ],
+    "Quality": [
+      "dashboard",
+      "quality",
+      "masters"
+    ],
+    "Management": [
+      "dashboard",
+      "tool_crib",
+      "quality",
+      "material",
+      "production",
+      "maintenance",
+      "masters"
+    ]
+  },
+  "users": {
+    "admin": {
+      "password_hash": "scrypt:32768:8:1$Wu4zqVyHJZRJHJwB$4b66e58a65547841834d6cd0c9ede0553dbbe148b330e115b86c7db840e49f8504d009f6040f73cf65b42d8d95d83b350aceb9796e652dc952c5d0ef5eeb9458",
+      "role": "Admin"
+    },
+    "production": {
+      "password_hash": "scrypt:32768:8:1$PL8OCRfWH2HZzcel$dcff1d2c0cd7933fd9a5712ff6e0e2a8f20472b82ea19047c38417a196b7d3d42d72b656905c3f1c7fb6862a962eba260e5d0cb61fddce3d9020e6352c58129a",
+      "role": "Production"
+    },
+    "quality": {
+      "password_hash": "scrypt:32768:8:1$kfwjAcLIR0l8WrOD$e2888be99d71111cb493e985d055d9ae644f2583bce82569feaf9292fe00cf9c04127b3cba0c5b4b9eca46cdb2ecd8dc7697bb1771d056eecb3f77a8253203c1",
+      "role": "Quality"
+    },
+    "management": {
+      "password_hash": "scrypt:32768:8:1$c2GomNxnrgPBgU2s$0f96c590bd261ef579ff0a11c21c59ac3912e8e6d43c52a244b47a27c9b56b2bf903956997544ed5c632d9c9036fbf574d18858f33dfb8941088967f21c72f3c",
+      "role": "Management"
+    }
+  }
+}

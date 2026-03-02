@@ -12,9 +12,14 @@
   <header class="home-header">
     <h1 class="home-title">ELTA Workshop Suite</h1>
     <div class="home-subtitle">Tool Crib · Quality · Material · Production · Maintenance</div>
+    <div style="margin-top:10px;">
+      <span>Logged in: <strong>{{ current_user }}</strong> ({{ current_role }})</span>
+      <a href="/logout" class="nav-btn nav-secondary" style="margin-left:10px;">Logout</a>
+    </div>
   </header>
 
   <!-- TOOL CRIB -->
+  {% if can_access('tool_crib') %}
   <section class="home-section">
     <div class="home-section-head">
       <h2>Tool Crib</h2>
@@ -43,8 +48,10 @@
       </a>
     </div>
   </section>
+  {% endif %}
 
   <!-- QUALITY -->
+  {% if can_access('quality') %}
   <section class="home-section">
     <div class="home-section-head">
       <h2>Quality Management</h2>
@@ -63,8 +70,10 @@
       </a>
     </div>
   </section>
+  {% endif %}
 
   <!-- MATERIAL -->
+  {% if can_access('material') %}
   <section class="home-section">
     <div class="home-section-head">
       <h2>Material Management</h2>
@@ -94,8 +103,10 @@
       </a>
     </div>
   </section>
+  {% endif %}
 
   <!-- PRODUCTION -->
+  {% if can_access('production') %}
   <section class="home-section">
     <div class="home-section-head">
       <h2>Production</h2>
@@ -108,14 +119,16 @@
         <div class="tile-text">Shift Production Entry</div>
       </a>
 
-      <a href="/shift/view" class="tile tile-red">
+      <a href="/shift/report" class="tile tile-red">
         <div class="tile-emoji">📊</div>
         <div class="tile-text">Shift Production Report</div>
       </a>
     </div>
   </section>
+  {% endif %}
 
   <!-- MAINTENANCE -->
+  {% if can_access('maintenance') %}
   <section class="home-section">
     <div class="home-section-head">
       <h2>Maintenance</h2>
@@ -139,8 +152,10 @@
       </a>
     </div>
   </section>
+  {% endif %}
 
   <!-- MASTERS -->
+  {% if can_access('masters') %}
   <section class="home-section">
     <div class="home-section-head">
       <h2>Masters</h2>
@@ -165,6 +180,7 @@
       
     </div>
   </section>
+  {% endif %}
 
   <footer class="home-footer">
     © ELTA Engineering – Workshop Suite
@@ -174,4 +190,3 @@
 
 </body>
 </html>
-

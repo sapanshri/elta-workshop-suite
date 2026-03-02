@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Machine Work Report</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide">
+
+<h1>Machine Work Report (Datewise / Shiftwise)</h1>
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">🏠 Home</a>
+    <a href="/shift/add" class="nav-btn nav-primary">➕ New Shift</a>
+    <a href="/shift/view" class="nav-btn nav-secondary">📋 Shift Entries</a>
+</div>
+
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+    <label>Machine</label>
+    <select name="machine_code">
+        <option value="" {% if not machine_code %}selected{% endif %}>-- All --</option>
+        {% for m in machines %}
+        <option value="{{ m.machine_code }}" {% if machine_code == m.machine_code %}selected{% endif %}>
+            {{ m.machine_code }} | {{ m.machine_name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Date Range</label>
+    <select name="date_range" id="date_range">
+        <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+        <option value="last_7" {% if date_range == 'last_7' %}selected{% endif %}>Last 7 Days</option>
+        <option value="last_15" {% if date_range == 'last_15' %}selected{% endif %}>Last 15 Days</option>
+        <option value="last_30" {% if date_range == 'last_30' %}selected{% endif %}>Last 30 Days</option>
+        <option value="this_month" {% if date_range == 'this_month' %}selected{% endif %}>This Month</option>
+        <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+    </select>
+
+    <div id="custom_dates">
+        <label>From Date</label>
+        <input type="date" name="from_date" value="{{ from_date }}">
+
+        <label>To Date</label>
+        <input type="date" name="to_date" value="{{ to_date }}">
+    </div>
+
+    <label>Shift (Optional)</label>
+    <select name="shift">
+        <option value="" {% if not shift %}selected{% endif %}>-- All --</option>
+        <option value="A" {% if shift == 'A' %}selected{% endif %}>A</option>
+        <option value="B" {% if shift == 'B' %}selected{% endif %}>B</option>
+    </select>
+
+    <div style="display:flex; gap:10px; margin-top:12px;">
+        <button type="submit" class="nav-btn nav-primary full-width">Apply Filters</button>
+        <a href="/shift/report" class="nav-btn nav-secondary full-width" style="text-align:center;">Clear</a>
+    </div>
+</form>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Date</th>
+    <th>Shift</th>
+    <th>Machine</th>
+    <th>Machine Name</th>
+    <th>Line Items</th>
+    <th>Item Count</th>
+    <th>OK Qty</th>
+    <th>Reject Qty</th>
+    <th>Total Qty</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r.shift_date }}</td>
+    <td>{{ r.shift }}</td>
+    <td>{{ r.machine_code }}</td>
+    <td>{{ r.machine_name }}</td>
+    <td class="num">{{ r.line_count }}</td>
+    <td class="num">{{ r.item_count }}</td>
+    <td class="num">{{ r.ok_qty }}</td>
+    <td class="num">{{ r.rej_qty }}</td>
+    <td class="num"><b>{{ r.total_qty }}</b></td>
+</tr>
+{% endfor %}
+</tbody>
+<tfoot>
+<tr>
+    <th colspan="6" style="text-align:right;">Grand Total</th>
+    <th class="num">{{ summary.ok_qty }}</th>
+    <th class="num">{{ summary.rej_qty }}</th>
+    <th class="num">{{ summary.total_qty }}</th>
+</tr>
+</tfoot>
+</table>
+
+{% if not rows %}
+<p style="margin-top:10px;">No production records found for selected filters.</p>
+{% endif %}
+
+</div>
+</div>
+
+<script>
+function toggleCustomDates() {
+    const range = document.getElementById("date_range");
+    const box = document.getElementById("custom_dates");
+    if (!range || !box) return;
+    box.style.display = (range.value === "custom") ? "block" : "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    toggleCustomDates();
+    const range = document.getElementById("date_range");
+    if (range) range.addEventListener("change", toggleCustomDates);
+});
+</script>
+
+</body>
+</html>

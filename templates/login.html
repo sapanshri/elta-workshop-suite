@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login – ELTA Workshop Suite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page">
+    <div class="card">
+        <h1>ELTA Workshop Suite</h1>
+        <p>Please login to continue.</p>
+
+        {% if error %}
+        <p class="error-text">{{ error }}</p>
+        {% endif %}
+
+        <form method="post" class="stacked-form">
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <label>Username</label>
+            <input type="text" name="username" required autofocus>
+
+            <label>Password</label>
+            <input type="password" name="password" required>
+
+            <button class="nav-btn nav-primary full-width" type="submit">Login</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
