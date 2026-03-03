@@ -117,9 +117,9 @@ if __name__ == "__main__":
     _run_daily_backup_async()
 
     # ✅ REQUIRED FOR PDF / CSV / EXCEL DOWNLOADS
-    webview.settings = {
-        "ALLOW_DOWNLOADS": True,
-    }
+    # Do not replace settings dict (pywebview expects other keys to exist).
+    webview.settings["ALLOW_DOWNLOADS"] = True
+    webview.settings["WEBVIEW2_RUNTIME_PATH"] = os.environ.get("WEBVIEW2_RUNTIME_PATH", "")
 
     t = threading.Thread(target=run_server, args=(HOST, PORT), daemon=True)
     t.start()
