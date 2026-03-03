@@ -3,12 +3,17 @@ import time
 import socket
 import sys
 import json
+import os
 from datetime import date
 from pathlib import Path
 import webview
 
 from app import app
 from db import app_data_dir
+
+# pywebview winforms backend may access this key directly.
+# Ensure it exists to avoid KeyError in packaged Windows runs.
+os.environ.setdefault("WEBVIEW2_RUNTIME_PATH", "")
 
 HOST = "127.0.0.1"
 
