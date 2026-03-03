@@ -6,7 +6,6 @@ import json
 import os
 from datetime import date
 from pathlib import Path
-import webview
 
 from app import app
 from db import app_data_dir
@@ -14,6 +13,8 @@ from db import app_data_dir
 # pywebview winforms backend may access this key directly.
 # Ensure it exists to avoid KeyError in packaged Windows runs.
 os.environ.setdefault("WEBVIEW2_RUNTIME_PATH", "")
+
+import webview
 
 HOST = "127.0.0.1"
 
@@ -53,6 +54,22 @@ def ensure_single_instance(host="127.0.0.1", port=45454):
 def run_server(host, port):
     from waitress import serve
     serve(app, host=host, port=port, threads=8)
+
+
+def start_webview_safe():
+    """
+    Prefer Edge Chromium backend, but avoid hard crash if backend/env is broken.
+    """
+    try:
+        webview.start(gui="edgechromium")
+    except KeyError as e:
+        if str(e).strip("'") == "WEBVIEW2_RUNTIME_PATH":
+            os.environ["WEBVIEW2_RUNTIME_PATH"] = ""
+            webview.start()
+        else:
+            raise
+    except Exception:
+        webview.start()
 
 
 def _backup_state_file() -> Path:
@@ -112,7 +129,7 @@ if __name__ == "__main__":
             "ELTA Workshop Suite",
             html="<h3>Server failed to start.</h3>"
         )
-        webview.start(gui="edgechromium")
+        start_webview_safe()
     else:
         webview.create_window(
             "ELTA Workshop Suite",
@@ -120,4 +137,4 @@ if __name__ == "__main__":
             width=1200,
             height=800,
         )
-        webview.start(gui="edgechromium")
+        start_webview_safe()
