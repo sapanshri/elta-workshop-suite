@@ -4,7 +4,7 @@ This project includes `db_backup_to_ec2.py` to:
 - take a safe SQLite snapshot backup,
 - compress it (`.db.gz`),
 - store it in a separate local backup directory,
-- upload it to AWS EC2 over SSH/SCP,
+- upload it to AWS EC2 over SFTP (Paramiko),
 - delete old local and remote backups.
 
 ## 1) Configure
@@ -71,3 +71,12 @@ Use an account that can access:
 - DB file location
 - SSH key file
 - network route to EC2
+
+## Windows dependencies
+
+No system `ssh/scp` binaries are required now.
+
+Required:
+- Python environment includes `paramiko`
+- reachable EC2 host/port
+- valid private key path in `backup_config.json`

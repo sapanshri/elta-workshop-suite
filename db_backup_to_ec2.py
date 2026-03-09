@@ -2,9 +2,9 @@ import argparse
 import gzip
 import json
 import os
+import fnmatch
 import shutil
 import sqlite3
-import subprocess
 import sys
 import tempfile
 from datetime import datetime
@@ -77,67 +77,68 @@ def remove_old_local(local_dir: Path, keep_days: int, pattern: str = DEFAULT_PAT
     return removed
 
 
-def run_cmd(args: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run(args, capture_output=True, text=True, check=True)
+def _sftp_mkdir_p(sftp, remote_dir: str) -> None:
+    parts = [p for p in remote_dir.split("/") if p]
+    cur = "/" if remote_dir.startswith("/") else "."
+    for p in parts:
+        cur = f"{cur.rstrip('/')}/{p}" if cur != "/" else f"/{p}"
+        try:
+            sftp.stat(cur)
+        except Exception:
+            sftp.mkdir(cur)
 
 
-def check_ssh_tools() -> None:
-    for tool in ("ssh", "scp"):
-        if shutil.which(tool) is None:
-            raise RuntimeError(f"Required tool not found in PATH: {tool}")
-
-
-def ensure_remote_dir(host: str, user: str, key_file: str, port: int, remote_dir: str) -> None:
-    run_cmd([
-        "ssh",
-        "-i",
-        key_file,
-        "-p",
-        str(port),
-        "-o",
-        "StrictHostKeyChecking=accept-new",
-        f"{user}@{host}",
-        f"mkdir -p '{remote_dir}'",
-    ])
-
-
-def upload_backup(host: str, user: str, key_file: str, port: int, local_file: Path, remote_dir: str) -> None:
-    run_cmd([
-        "scp",
-        "-i",
-        key_file,
-        "-P",
-        str(port),
-        "-o",
-        "StrictHostKeyChecking=accept-new",
-        str(local_file),
-        f"{user}@{host}:{remote_dir}/",
-    ])
-
-
-def remove_old_remote(
+def _upload_and_cleanup_remote(
     host: str,
     user: str,
     key_file: str,
     port: int,
+    local_file: Path,
     remote_dir: str,
     keep_days: int,
     pattern: str = DEFAULT_PATTERN,
 ) -> None:
-    if keep_days < 0:
-        return
-    cmd = f"find '{remote_dir}' -type f -name '{pattern}' -mtime +{keep_days} -delete"
-    run_cmd([
-        "ssh",
-        "-i",
-        key_file,
-        "-p",
-        str(port),
-        "-o",
-        "StrictHostKeyChecking=accept-new",
-        f"{user}@{host}",
-        cmd,
-    ])
+    try:
+        import paramiko
+    except Exception as e:
+        raise RuntimeError(
+            "Paramiko not installed. Install with: pip install paramiko"
+        ) from e
+
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        client.connect(
+            hostname=host,
+            port=port,
+            username=user,
+            key_filename=key_file,
+            look_for_keys=False,
+            allow_agent=False,
+            timeout=20,
+        )
+        sftp = client.open_sftp()
+        try:
+            _sftp_mkdir_p(sftp, remote_dir)
+
+            remote_file = f"{remote_dir.rstrip('/')}/{local_file.name}"
+            sftp.put(str(local_file), remote_file)
+
+            if keep_days >= 0:
+                cutoff = datetime.now().timestamp() - (keep_days * 86400)
+                for entry in sftp.listdir_attr(remote_dir):
+                    if not fnmatch.fnmatch(entry.filename, pattern):
+                        continue
+                    if entry.st_mtime < cutoff:
+                        old_path = f"{remote_dir.rstrip('/')}/{entry.filename}"
+                        try:
+                            sftp.remove(old_path)
+                        except Exception:
+                            pass
+        finally:
+            sftp.close()
+    finally:
+        client.close()
 
 
 def build_local_dir(cfg: dict) -> Path:
@@ -201,16 +202,18 @@ def run_backup(dry_run: bool = False) -> int:
         return 4
 
     try:
-        check_ssh_tools()
-        ensure_remote_dir(host, user, key_file, port, remote_dir)
-        upload_backup(host, user, key_file, port, backup_path, remote_dir)
-        remove_old_remote(host, user, key_file, port, remote_dir, keep_remote_days)
-    except subprocess.CalledProcessError as e:
+        _upload_and_cleanup_remote(
+            host=host,
+            user=user,
+            key_file=key_file,
+            port=port,
+            local_file=backup_path,
+            remote_dir=remote_dir,
+            keep_days=keep_remote_days,
+        )
+    except Exception as e:
         print("Backup upload failed.", file=sys.stderr)
-        if e.stdout:
-            print(e.stdout, file=sys.stderr)
-        if e.stderr:
-            print(e.stderr, file=sys.stderr)
+        print(str(e), file=sys.stderr)
         return 5
 
     print("EC2 upload completed.")
