@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ELTA Machine Report</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .public-shell {
+            max-width: 1180px;
+            margin: 24px auto 0;
+        }
+        .public-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border: 1px solid #d4dce6;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(20, 40, 60, 0.06);
+            margin-bottom: 18px;
+        }
+        .public-brand {
+            font-size: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4f6173;
+            font-weight: 700;
+        }
+        .public-nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .public-nav-link {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #15324d;
+            background: #eef3f8;
+            border: 1px solid #dbe3eb;
+            font-weight: 600;
+        }
+        .public-nav-link.active {
+            background: #15324d;
+            color: #ffffff;
+            border-color: #15324d;
+        }
+        .public-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .public-meta {
+            font-size: 13px;
+            color: #444;
+            text-align: right;
+        }
+        .public-note {
+            background: #f3f6fa;
+            border: 1px solid #d4dce6;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .public-error {
+            background: #fff3f3;
+            border: 1px solid #e2b5b5;
+            color: #8b1e1e;
+        }
+    </style>
+</head>
+<body>
+<div class="page-wide">
+<div class="public-shell">
+<div class="public-nav">
+    <div class="public-brand">ELTA Engineering Public Portal</div>
+    <div class="public-nav-links">
+        <a href="/" class="public-nav-link">Home</a>
+        <a href="/material-inventory" class="public-nav-link">Material Inventory</a>
+        <a href="/machine-report" class="public-nav-link active">Machine Report</a>
+    </div>
+</div>
+
+<div class="card-wide">
+<div class="public-header">
+    <div>
+        <h1>Machine Work Report</h1>
+        <div class="public-note">Read-only public machine report sourced from the latest desktop backup uploaded to the server.</div>
+    </div>
+    <div class="public-meta">
+        {% if backup_name %}
+        <div><b>Backup File:</b> {{ backup_name }}</div>
+        {% endif %}
+        {% if backup_updated_at %}
+        <div><b>Updated:</b> {{ backup_updated_at|datetimeformat }}</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if load_error %}
+<div class="public-note public-error">{{ load_error }}</div>
+{% endif %}
+
+<div style="display:flex; gap:10px; margin-bottom:15px;">
+    <a href="/machine-report/excel?machine_code={{ machine_code }}&date_range={{ date_range }}&from_date={{ from_date }}&to_date={{ to_date }}&shift={{ shift }}"
+       class="nav-btn nav-secondary">Export to Excel</a>
+</div>
+
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+    <label>Machine</label>
+    <select name="machine_code">
+        <option value="" {% if not machine_code %}selected{% endif %}>-- All --</option>
+        {% for m in machines %}
+        <option value="{{ m.machine_code }}" {% if machine_code == m.machine_code %}selected{% endif %}>
+            {{ m.machine_code }} | {{ m.machine_name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label>Date Range</label>
+    <select name="date_range" id="date_range">
+        <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+        <option value="last_7" {% if date_range == 'last_7' %}selected{% endif %}>Last 7 Days</option>
+        <option value="last_15" {% if date_range == 'last_15' %}selected{% endif %}>Last 15 Days</option>
+        <option value="last_30" {% if date_range == 'last_30' %}selected{% endif %}>Last 30 Days</option>
+        <option value="this_month" {% if date_range == 'this_month' %}selected{% endif %}>This Month</option>
+        <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+    </select>
+
+    <div id="custom_dates">
+        <label>From Date</label>
+        <input type="date" name="from_date" value="{{ from_date }}">
+
+        <label>To Date</label>
+        <input type="date" name="to_date" value="{{ to_date }}">
+    </div>
+
+    <label>Shift (Optional)</label>
+    <select name="shift">
+        <option value="" {% if not shift %}selected{% endif %}>-- All --</option>
+        <option value="A" {% if shift == 'A' %}selected{% endif %}>A</option>
+        <option value="B" {% if shift == 'B' %}selected{% endif %}>B</option>
+    </select>
+
+    <div style="display:flex; gap:10px; margin-top:12px;">
+        <button type="submit" class="nav-btn nav-primary full-width">Apply Filters</button>
+        <a href="/machine-report" class="nav-btn nav-secondary full-width" style="text-align:center;">Clear</a>
+    </div>
+</form>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Date</th>
+    <th>Shift</th>
+    <th>Machine</th>
+    <th>Machine Name</th>
+    <th>Item Codes</th>
+    <th>OK Qty</th>
+    <th>Reject Qty</th>
+    <th>Total Qty</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r.shift_date }}</td>
+    <td>{{ r.shift }}</td>
+    <td>{{ r.machine_code }}</td>
+    <td>{{ r.machine_name }}</td>
+    <td>{{ r.item_codes }}</td>
+    <td class="num">{{ r.ok_qty }}</td>
+    <td class="num">{{ r.rej_qty }}</td>
+    <td class="num"><b>{{ r.total_qty }}</b></td>
+</tr>
+{% endfor %}
+{% if not rows %}
+<tr>
+    <td colspan="8" style="text-align:center;">No production records found for selected filters.</td>
+</tr>
+{% endif %}
+</tbody>
+<tfoot>
+<tr>
+    <th colspan="5" style="text-align:right;">Grand Total</th>
+    <th class="num">{{ summary.ok_qty }}</th>
+    <th class="num">{{ summary.rej_qty }}</th>
+    <th class="num">{{ summary.total_qty }}</th>
+</tr>
+</tfoot>
+</table>
+
+</div>
+</div>
+</div>
+
+<script>
+function toggleCustomDates() {
+    const range = document.getElementById("date_range");
+    const box = document.getElementById("custom_dates");
+    if (!range || !box) return;
+    box.style.display = (range.value === "custom") ? "block" : "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    toggleCustomDates();
+    const range = document.getElementById("date_range");
+    if (range) range.addEventListener("change", toggleCustomDates);
+});
+</script>
+</body>
+</html>

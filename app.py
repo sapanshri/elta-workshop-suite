@@ -19,6 +19,7 @@ from modules.maintenance import maintenance_bp
 from modules.breakdown import breakdown_bp
 from modules.machine_history import machine_history_bp
 from modules.complaints import complaints_bp
+from modules.public_inventory import public_inventory_bp, is_public_host
 
 import config
 from db import app_data_dir
@@ -45,7 +46,13 @@ def allowed_file(filename: str) -> bool:
 
 init_db()
 
-PUBLIC_PATHS = {"/login"}
+PUBLIC_PATHS = {
+    "/login",
+    "/material-inventory",
+    "/public/material-inventory",
+    "/machine-report",
+    "/machine-report/excel",
+}
 
 
 @app.before_request
@@ -53,6 +60,8 @@ def enforce_auth():
     path = request.path or "/"
 
     if path.startswith("/static/"):
+        return
+    if path == "/" and is_public_host(request.host):
         return
     if path in PUBLIC_PATHS:
         return
@@ -76,6 +85,17 @@ def inject_auth_context():
         "current_role": role,
         "can_access": lambda module_key: role_can_access(role, module_key),
     }
+
+
+@app.template_filter("datetimeformat")
+def datetimeformat_filter(value):
+    if not value:
+        return ""
+    try:
+        from datetime import datetime
+        return datetime.fromtimestamp(float(value)).strftime("%d-%m-%Y %I:%M %p")
+    except Exception:
+        return str(value)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -112,6 +132,8 @@ def logout():
 
 @app.route("/")
 def home():
+    if is_public_host(request.host):
+        return render_template("public_home.html")
     if app.config.get("LICENSE_ERROR"):
         return render_template("license.html", error=app.config["LICENSE_ERROR"])
     return render_template("home.html")
@@ -134,6 +156,7 @@ app.register_blueprint(maintenance_bp)
 app.register_blueprint(breakdown_bp)
 app.register_blueprint(machine_history_bp)
 app.register_blueprint(complaints_bp)
+app.register_blueprint(public_inventory_bp)
 
 if __name__ == "__main__":
     # Start browser in a background thread

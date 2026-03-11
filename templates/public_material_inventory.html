@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ELTA Material Inventory</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .public-shell {
+            max-width: 1180px;
+            margin: 24px auto 0;
+        }
+        .public-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border: 1px solid #d4dce6;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(20, 40, 60, 0.06);
+            margin-bottom: 18px;
+        }
+        .public-brand {
+            font-size: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4f6173;
+            font-weight: 700;
+        }
+        .public-nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .public-nav-link {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #15324d;
+            background: #eef3f8;
+            border: 1px solid #dbe3eb;
+            font-weight: 600;
+        }
+        .public-nav-link.active {
+            background: #15324d;
+            color: #ffffff;
+            border-color: #15324d;
+        }
+        .public-nav-link.muted {
+            color: #6e7d8b;
+            background: #f6f8fa;
+        }
+        .public-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .public-meta {
+            font-size: 13px;
+            color: #444;
+            text-align: right;
+        }
+        .public-note {
+            background: #f3f6fa;
+            border: 1px solid #d4dce6;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .public-error {
+            background: #fff3f3;
+            border: 1px solid #e2b5b5;
+            color: #8b1e1e;
+        }
+    </style>
+</head>
+<body>
+<div class="page-wide">
+<div class="public-shell">
+<div class="public-nav">
+    <div class="public-brand">ELTA Engineering Public Portal</div>
+    <div class="public-nav-links">
+        <a href="/" class="public-nav-link">Home</a>
+        <a href="/material-inventory" class="public-nav-link active">Material Inventory</a>
+        <a href="/machine-report" class="public-nav-link">Machine Report</a>
+    </div>
+</div>
+
+<div class="card-wide">
+
+<div class="public-header">
+    <div>
+        <h1>Material Inventory</h1>
+        <div class="public-note">Read-only public inventory view sourced from the latest desktop backup uploaded to the server.</div>
+    </div>
+    <div class="public-meta">
+        {% if backup_name %}
+        <div><b>Backup File:</b> {{ backup_name }}</div>
+        {% endif %}
+        {% if backup_updated_at %}
+        <div><b>Updated:</b> {{ backup_updated_at|datetimeformat }}</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if load_error %}
+<div class="public-note public-error">{{ load_error }}</div>
+{% endif %}
+
+<form method="get" class="stacked-form" style="margin-bottom:15px;">
+<label>Customer</label>
+<select name="customer_id">
+    <option value="">-- All --</option>
+    {% for c in customers %}
+    <option value="{{ c.id }}"
+        {% if request.args.get('customer_id') == c.id|string %}selected{% endif %}>
+        {{ c.customer_name }}
+    </option>
+    {% endfor %}
+</select>
+
+<label>Item Code</label>
+<select name="item_code">
+    <option value="">-- All --</option>
+    {% for i in item_codes %}
+    <option value="{{ i.item_code }}"
+        {% if request.args.get('item_code') == i.item_code %}selected{% endif %}>
+        {{ i.item_code }}
+    </option>
+    {% endfor %}
+</select>
+
+<label>Status</label>
+<select name="status" id="status-filter">
+    <option value="">-- All --</option>
+    <option value="OPEN" {% if request.args.get('status') == 'OPEN' %}selected{% endif %}>OPEN</option>
+    <option value="CLOSED" {% if request.args.get('status') == 'CLOSED' %}selected{% endif %}>CLOSED</option>
+</select>
+
+<div id="closed-date-filters">
+    <label>ELTA Dispatch Date From</label>
+    <input type="date" name="from_date" value="{{ request.args.get('from_date','') }}">
+
+    <label>ELTA Dispatch Date To</label>
+    <input type="date" name="to_date" value="{{ request.args.get('to_date','') }}">
+</div>
+
+<div style="display:flex; gap:10px; margin-top:10px;">
+    <button class="nav-btn nav-primary full-width">Apply Filters</button>
+    <a href="{{ request.path }}" class="nav-btn nav-secondary full-width" style="text-align:center;">Clear Filters</a>
+</div>
+</form>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Customer</th>
+    <th>Challan</th>
+    <th>Status</th>
+    {% if closed_mode %}
+    <th>ELTA Challan</th>
+    <th>Dispatch Date</th>
+    {% endif %}
+    <th>Item Code</th>
+    <th>Process</th>
+    <th>Inward Qty</th>
+    <th>Available Qty</th>
+    {% if closed_mode %}
+    <th>OK</th>
+    <th>Rej</th>
+    <th>C/D</th>
+    <th>N/D</th>
+    <th>N/D PW</th>
+    <th>Total Dispatch</th>
+    {% endif %}
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+    <td>{{ r.customer_name }}</td>
+    <td>{{ r.customer_challan_no }}</td>
+    <td>{{ r.status }}</td>
+    {% if closed_mode %}
+    <td>{{ r.elta_challan_no }}</td>
+    <td>{{ r.dispatch_date }}</td>
+    {% endif %}
+    <td>{{ r.item_code }}</td>
+    <td>{{ r.process }}</td>
+    <td>{{ r.inward_qty }}</td>
+    <td><b>{{ r.available_qty }}</b></td>
+    {% if closed_mode %}
+    <td>{{ r.ok_qty }}</td>
+    <td>{{ r.rej_qty }}</td>
+    <td>{{ r.cd_qty }}</td>
+    <td>{{ r.nd_qty }}</td>
+    <td>{{ r.nd_pw_qty }}</td>
+    <td><b>{{ r.total_qty }}</b></td>
+    {% endif %}
+</tr>
+{% endfor %}
+{% if not rows %}
+<tr>
+    <td colspan="{% if closed_mode %}14{% else %}8{% endif %}" style="text-align:center;">No inventory rows found.</td>
+</tr>
+{% endif %}
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+
+<script>
+function toggleClosedDateFilters() {
+    const statusSelect = document.getElementById("status-filter");
+    const dateBox = document.getElementById("closed-date-filters");
+    if (!statusSelect || !dateBox) return;
+    dateBox.style.display = statusSelect.value === "CLOSED" ? "block" : "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    toggleClosedDateFilters();
+    const statusSelect = document.getElementById("status-filter");
+    if (statusSelect) {
+        statusSelect.addEventListener("change", toggleClosedDateFilters);
+    }
+});
+</script>
+</body>
+</html>
