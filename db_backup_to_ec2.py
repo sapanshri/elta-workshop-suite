@@ -22,6 +22,31 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
+def status_file() -> Path:
+    return Path(app_data_dir()) / "backup_status.json"
+
+
+def log_file() -> Path:
+    return Path(app_data_dir()) / "backup.log"
+
+
+def write_status(code: int, message: str, extra: dict | None = None) -> None:
+    payload = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "code": code,
+        "message": message,
+    }
+    if extra:
+        payload.update(extra)
+
+    p = status_file()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    with log_file().open("a", encoding="utf-8") as f:
+        f.write(f"[{payload['timestamp']}] code={code} {message}\n")
+
+
 def load_config() -> dict:
     # Prefer app-data config so packaged desktop app can be configured per machine.
     app_cfg = Path(app_data_dir()) / "backup_config.json"
@@ -39,13 +64,45 @@ def load_config() -> dict:
             app_cfg.parent.mkdir(parents=True, exist_ok=True)
             if not app_cfg.exists():
                 shutil.copy2(CONFIG_EXAMPLE_FILE, app_cfg)
-        raise FileNotFoundError(
-            f"Missing backup config. Create/update: {app_cfg}"
-        )
+                cfg_path = app_cfg
+
+    if cfg_path is None:
+        raise FileNotFoundError(f"Missing backup config. Create/update: {app_cfg}")
 
     with cfg_path.open("r", encoding="utf-8") as f:
         cfg = json.load(f)
     return cfg
+
+
+def resolve_ssh_key_file(cfg: dict) -> str:
+    raw = (cfg.get("ssh_key_file") or "").strip()
+    candidates = []
+
+    if raw:
+        candidates.append(Path(os.path.expanduser(raw)))
+
+    app_dir = Path(app_data_dir())
+    candidates.append(app_dir / "elta-ec2.pem")
+    candidates.append(app_dir / ".ssh" / "elta-ec2.pem")
+
+    runtime_dir = (
+        Path(sys.executable).resolve().parent
+        if getattr(sys, "frozen", False)
+        else Path(__file__).resolve().parent
+    )
+    candidates.append(runtime_dir / "elta-ec2.pem")
+    candidates.append(Path.home() / ".ssh" / "elta-ec2.pem")
+
+    seen = set()
+    for path in candidates:
+        key = str(path).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        if path.exists():
+            return str(path)
+
+    return os.path.expanduser(raw) if raw else ""
 
 
 def make_sqlite_snapshot(src_db: Path, out_db: Path) -> None:
@@ -156,15 +213,18 @@ def run_backup(dry_run: bool = False) -> int:
         cfg = load_config()
     except FileNotFoundError as e:
         print(str(e), file=sys.stderr)
+        write_status(6, str(e))
         return 6
 
     if not cfg.get("enabled", True):
         print("Backup is disabled in backup_config.json (enabled=false).")
+        write_status(0, "Backup skipped because enabled=false")
         return 0
 
     db_path = Path(get_db_path())
     if not db_path.exists():
         print(f"Database file not found: {db_path}", file=sys.stderr)
+        write_status(2, f"Database file not found: {db_path}")
         return 2
 
     local_dir = build_local_dir(cfg)
@@ -186,19 +246,26 @@ def run_backup(dry_run: bool = False) -> int:
 
     if dry_run:
         print("Dry run: skipped EC2 upload and remote cleanup.")
+        write_status(
+            0,
+            "Dry run completed",
+            {"local_backup": str(backup_path), "local_removed": local_removed},
+        )
         return 0
 
     host = (cfg.get("ec2_host") or "").strip()
     user = (cfg.get("ec2_user") or "").strip()
-    key_file = os.path.expanduser((cfg.get("ssh_key_file") or "").strip())
+    key_file = resolve_ssh_key_file(cfg)
     remote_dir = (cfg.get("remote_backup_dir") or "").strip()
     port = int(cfg.get("ssh_port", 22))
 
     if not all([host, user, key_file, remote_dir]):
         print("Missing EC2/SSH config in backup_config.json.", file=sys.stderr)
+        write_status(3, "Missing EC2/SSH config in backup_config.json.")
         return 3
     if not Path(key_file).exists():
         print(f"SSH key file not found: {key_file}", file=sys.stderr)
+        write_status(4, f"SSH key file not found: {key_file}")
         return 4
 
     try:
@@ -214,10 +281,25 @@ def run_backup(dry_run: bool = False) -> int:
     except Exception as e:
         print("Backup upload failed.", file=sys.stderr)
         print(str(e), file=sys.stderr)
+        write_status(
+            5,
+            f"Backup upload failed: {e}",
+            {"local_backup": str(backup_path), "ssh_key_file": key_file},
+        )
         return 5
 
     print("EC2 upload completed.")
     print(f"Remote cleanup done (kept last {keep_remote_days} days).")
+    write_status(
+        0,
+        "EC2 upload completed.",
+        {
+            "local_backup": str(backup_path),
+            "remote_backup_dir": remote_dir,
+            "ssh_key_file": key_file,
+            "local_removed": local_removed,
+        },
+    )
     return 0
 
 

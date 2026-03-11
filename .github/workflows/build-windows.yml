@@ -34,6 +34,9 @@ jobs:
             --onedir `
             --windowed `
             --name "ELTA_Workshop_Suite" `
+            --collect-all paramiko `
+            --collect-all bcrypt `
+            --collect-all cryptography `
             --add-data "templates;templates" `
             --add-data "static;static" `
             --add-data "backup_config.json.example;." `

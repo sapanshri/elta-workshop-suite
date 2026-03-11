@@ -103,6 +103,12 @@ def _run_daily_backup_async():
             code = run_backup(dry_run=False)
             if code == 0:
                 _mark_backup_success_today()
+            else:
+                print(
+                    f"[backup] failed with code={code}. "
+                    f"See {Path(app_data_dir()) / 'backup_status.json'}",
+                    file=sys.stderr,
+                )
         except Exception as e:
             print(f"[backup] failed: {e}", file=sys.stderr)
 
