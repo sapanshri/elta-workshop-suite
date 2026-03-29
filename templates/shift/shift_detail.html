@@ -38,6 +38,7 @@
 <thead>
 <tr>
     <th>Item</th>
+    <th>Setup No.</th>
     <th>Machine</th>
     <th>Operator</th>
     <th>OK</th>
@@ -48,6 +49,7 @@
 {% for p in production %}
 <tr>
     <td>{{ p.item_code }}</td>
+    <td>{{ p.setup_no or "" }}</td>
     <td>{{ p.machine }}</td>
     <td>{{ p.operator }}</td>
     <td>{{ p.ok_qty }}</td>
@@ -128,4 +130,3 @@
 
 </body>
 </html>
-

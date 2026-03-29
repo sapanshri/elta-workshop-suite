@@ -8,6 +8,11 @@ import csv
 shift_bp = Blueprint("shift", __name__, url_prefix="/shift")
 
 
+def has_shift_production_setup_no(db):
+    cols = db.execute("PRAGMA table_info(shift_production)").fetchall()
+    return any((col["name"] if hasattr(col, "keys") else col[1]) == "setup_no" for col in cols)
+
+
 def resolve_machine_report_filters(args):
     today = date.today()
     date_range = (args.get("date_range") or "last_7").strip()
@@ -42,6 +47,11 @@ def resolve_machine_report_filters(args):
 
 
 def load_machine_report_data(db, filters):
+    setup_expr = (
+        "GROUP_CONCAT(DISTINCT NULLIF(TRIM(COALESCE(sp.setup_no, '')), ''))"
+        if has_shift_production_setup_no(db)
+        else "''"
+    )
     query = """
         SELECT
             sh.shift_date,
@@ -49,6 +59,7 @@ def load_machine_report_data(db, filters):
             sp.machine AS machine_code,
             COALESCE(mm.machine_name, '') AS machine_name,
             GROUP_CONCAT(DISTINCT sp.item_code) AS item_codes,
+            {setup_expr} AS setup_nos,
             SUM(COALESCE(sp.ok_qty, 0)) AS ok_qty,
             SUM(COALESCE(sp.rej_qty, 0)) AS rej_qty,
             SUM(COALESCE(sp.ok_qty, 0) + COALESCE(sp.rej_qty, 0)) AS total_qty
@@ -73,6 +84,7 @@ def load_machine_report_data(db, filters):
         GROUP BY sh.shift_date, sh.shift, sp.machine, mm.machine_name
         ORDER BY date(sh.shift_date) DESC, sh.shift, sp.machine
     """
+    query = query.format(setup_expr=setup_expr)
 
     rows = db.execute(query, params).fetchall()
 
@@ -155,12 +167,13 @@ def shift_add():
 
         # ================= PRODUCTION =================
         items = request.form.getlist("item_code[]")
+        setup_nos = request.form.getlist("setup_no[]")
         machine_codes = request.form.getlist("machine_code[]")
         operators = request.form.getlist("operator[]")
         oks = request.form.getlist("ok_qty[]")
         rejs = request.form.getlist("rej_qty[]")
 
-        n = min(len(items), len(machine_codes), len(operators), len(oks), len(rejs))
+        n = min(len(items), len(setup_nos), len(machine_codes), len(operators), len(oks), len(rejs))
 
         for i in range(n):
             item = (items[i] or "").strip()
@@ -175,11 +188,12 @@ def shift_add():
 
             db.execute("""
                 INSERT INTO shift_production
-                (shift_id, item_code, machine, operator, ok_qty, rej_qty)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (shift_id, item_code, setup_no, machine, operator, ok_qty, rej_qty)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 shift_id,
                 item,
+                (setup_nos[i] or "").strip(),
                 (machine_codes[i] or "").strip(),   # machine_code stored in 'machine'
                 (operators[i] or "").strip(),
                 ok,
@@ -352,6 +366,7 @@ def shift_machine_report_excel():
         "Machine",
         "Machine Name",
         "Item Codes",
+        "Setup Nos",
         "OK Qty",
         "Reject Qty",
         "Total Qty",
@@ -363,6 +378,7 @@ def shift_machine_report_excel():
             r["machine_code"],
             r["machine_name"],
             r["item_codes"] or "",
+            r["setup_nos"] or "",
             r["ok_qty"],
             r["rej_qty"],
             r["total_qty"],

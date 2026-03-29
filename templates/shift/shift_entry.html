@@ -36,6 +36,7 @@
 <tr>
     <th>Machine</th>
     <th>Item Code</th>
+    <th>Setup No.</th>
     <th>Operator</th>
     <th>OK</th>
     <th>Reject</th>
@@ -60,6 +61,7 @@
             {% endfor %}
         </select>
     </td>
+    <td><input name="setup_no[]" placeholder="Setup No."></td>
     <td><input name="operator[]"></td>
     <td><input type="number" name="ok_qty[]" value="0"></td>
     <td><input type="number" name="rej_qty[]" value="0"></td>
@@ -171,4 +173,3 @@
 
 </body>
 </html>
-

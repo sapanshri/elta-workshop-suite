@@ -312,6 +312,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             shift_id INTEGER NOT NULL,
             item_code TEXT NOT NULL,
+            setup_no TEXT,
             machine TEXT,
             operator TEXT,
             ok_qty INTEGER DEFAULT 0,
@@ -494,6 +495,7 @@ def init_db():
         add_column_safe("ALTER TABLE item_code_ppap_docs ADD COLUMN doc_category TEXT DEFAULT 'PPAP'")
         add_column_safe("ALTER TABLE item_code_ppap_docs ADD COLUMN version_no INTEGER DEFAULT 1")
         add_column_safe("ALTER TABLE item_code_ppap_docs ADD COLUMN is_current INTEGER DEFAULT 1")
+        add_column_safe("ALTER TABLE shift_production ADD COLUMN setup_no TEXT")
 
         # 3) Fix wrong FK (item_codes -> item_code_master)
         # IMPORTANT: _fix_ppap_fk(con) must NOT close/commit the connection
@@ -577,4 +579,3 @@ def _fix_ppap_fk(con):
         print("✅ PPAP FK fixed")
 
    
-

@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 from db import app_data_dir
 from modules.materials import load_inventory_rows
-from modules.shift_production import load_machine_report_data, resolve_machine_report_filters
+from modules.shift_production import has_shift_production_setup_no, load_machine_report_data, resolve_machine_report_filters
 
 
 public_inventory_bp = Blueprint("public_inventory", __name__)
@@ -683,6 +683,65 @@ def _public_site_root() -> str:
     return request.url_root.rstrip("/")
 
 
+def load_public_machine_report_data(db, filters):
+    setup_expr = "COALESCE(sp.setup_no, '')" if has_shift_production_setup_no(db) else "''"
+    query = """
+        SELECT
+            sh.shift_date,
+            sh.shift,
+            sp.machine AS machine_code,
+            COALESCE(mm.machine_name, '') AS machine_name,
+            sp.item_code AS item_code,
+            {setup_expr} AS setup_no,
+            COALESCE(sp.ok_qty, 0) AS ok_qty,
+            COALESCE(sp.rej_qty, 0) AS rej_qty
+        FROM shift_production sp
+        JOIN shift_header sh ON sh.id = sp.shift_id
+        LEFT JOIN machine_master mm ON mm.machine_code = sp.machine
+        WHERE sp.machine IS NOT NULL
+          AND sp.machine != ''
+          AND date(sh.shift_date) BETWEEN date(?) AND date(?)
+    """
+    params = [filters["from_date"], filters["to_date"]]
+
+    if filters["shift"]:
+        query += " AND sh.shift = ?"
+        params.append(filters["shift"])
+
+    if filters["machine_code"]:
+        query += " AND sp.machine = ?"
+        params.append(filters["machine_code"])
+
+    query += """
+        ORDER BY date(sh.shift_date) DESC, sh.shift, sp.machine, sp.item_code, sp.id
+    """
+    query = query.format(setup_expr=setup_expr)
+
+    rows = db.execute(query, params).fetchall()
+
+    summary = db.execute("""
+        SELECT
+            COALESCE(SUM(COALESCE(sp.ok_qty, 0)), 0) AS ok_qty,
+            COALESCE(SUM(COALESCE(sp.rej_qty, 0)), 0) AS rej_qty
+        FROM shift_production sp
+        JOIN shift_header sh ON sh.id = sp.shift_id
+        WHERE sp.machine IS NOT NULL
+          AND sp.machine != ''
+          AND date(sh.shift_date) BETWEEN date(?) AND date(?)
+          AND (? = '' OR sh.shift = ?)
+          AND (? = '' OR sp.machine = ?)
+    """, (
+        filters["from_date"],
+        filters["to_date"],
+        filters["shift"],
+        filters["shift"],
+        filters["machine_code"],
+        filters["machine_code"],
+    )).fetchone()
+
+    return rows, summary
+
+
 def _save_rfq_submission(form_data, upload_file):
     saved_name = ""
     original_name = ""
@@ -957,7 +1016,7 @@ def public_machine_report():
 
     try:
         filters = resolve_machine_report_filters(request.args)
-        rows, summary = load_machine_report_data(db, filters)
+        rows, summary = load_public_machine_report_data(db, filters)
         machines = db.execute(
             """
             SELECT machine_code, machine_name
@@ -999,10 +1058,10 @@ def public_machine_report_excel():
             "Shift",
             "Machine",
             "Machine Name",
-            "Item Codes",
+            "Item Code",
+            "Setup No",
             "OK Qty",
             "Reject Qty",
-            "Total Qty",
         ])
         data = output.getvalue().encode("utf-8-sig")
         buf = io.BytesIO(data)
@@ -1016,7 +1075,7 @@ def public_machine_report_excel():
 
     try:
         filters = resolve_machine_report_filters(request.args)
-        rows, _ = load_machine_report_data(db, filters)
+        rows, _ = load_public_machine_report_data(db, filters)
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -1025,10 +1084,10 @@ def public_machine_report_excel():
             "Shift",
             "Machine",
             "Machine Name",
-            "Item Codes",
+            "Item Code",
+            "Setup No",
             "OK Qty",
             "Reject Qty",
-            "Total Qty",
         ])
         for r in rows:
             writer.writerow([
@@ -1036,10 +1095,10 @@ def public_machine_report_excel():
                 r["shift"],
                 r["machine_code"],
                 r["machine_name"],
-                r["item_codes"] or "",
+                r["item_code"] or "",
+                r["setup_no"] or "",
                 r["ok_qty"],
                 r["rej_qty"],
-                r["total_qty"],
             ])
 
         data = output.getvalue().encode("utf-8-sig")
