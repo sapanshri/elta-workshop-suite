@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "smtp_host": "smtp.yourmailserver.com",
+  "smtp_port": 587,
+  "use_tls": true,
+  "use_ssl": false,
+  "smtp_username": "smtp-user",
+  "smtp_password": "smtp-password",
+  "from_email": "info@eltaengineering.com",
+  "to_emails": [
+    "info@eltaengineering.com"
+  ],
+  "subject_prefix": "ELTA RFQ",
+  "timeout_seconds": 25
+}

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ service.meta_title }}</title>
+    <meta name="description" content="{{ service.meta_description }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta property="og:title" content="{{ service.meta_title }}">
+    <meta property="og:description" content="{{ service.meta_description }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:image" content="{{ og_image }}">
+    <meta name="keywords" content="{{ service.primary_keyword }}, {{ service.secondary_keywords|join(', ') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <script type="application/ld+json">{{ faq_schema_json|safe }}</script>
+    <style>
+        :root {
+            --ink: #0f1724;
+            --ink-soft: #556576;
+            --steel: #204462;
+            --steel-bright: #2f6d9d;
+            --white: #ffffff;
+            --line: rgba(28, 57, 84, 0.12);
+            --paper: #eef3f7;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Barlow", sans-serif;
+            color: var(--ink);
+            background: linear-gradient(180deg, #f3f7fa 0%, #f8fbfd 45%, #eef3f7 100%);
+        }
+        .container {
+            width: min(1160px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 0;
+        }
+        .brand {
+            font-family: "Rajdhani", sans-serif;
+            font-size: 34px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--ink);
+            letter-spacing: 0.1em;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav a {
+            text-decoration: none;
+            color: var(--ink-soft);
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid var(--line);
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 26px;
+            align-items: stretch;
+            padding: 24px 0 52px;
+        }
+        .card {
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--line);
+            border-radius: 26px;
+            padding: 30px;
+            box-shadow: 0 22px 50px rgba(10, 28, 43, 0.08);
+        }
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--steel-bright);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        h1 {
+            margin: 0 0 14px;
+            font-size: clamp(38px, 5vw, 60px);
+            line-height: 0.95;
+        }
+        p {
+            color: var(--ink-soft);
+            line-height: 1.74;
+            font-size: 18px;
+        }
+        ul {
+            display: grid;
+            gap: 12px;
+            padding-left: 18px;
+            color: var(--ink);
+        }
+        li { line-height: 1.6; }
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 18px;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 14px;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--steel) 0%, var(--steel-bright) 100%);
+            color: var(--white);
+            font-weight: 700;
+        }
+        .hero-visual {
+            position: relative;
+            overflow: hidden;
+            min-height: 420px;
+            padding: 0;
+        }
+        .hero-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10, 24, 37, 0.12) 0%, rgba(10, 24, 37, 0.46) 100%);
+        }
+        .footer {
+            padding: 10px 0 50px;
+        }
+        .faq-grid {
+            display: grid;
+            gap: 16px;
+            padding-bottom: 40px;
+        }
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a class="brand" href="/">ELTA</a>
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/#services">Services</a>
+                <a href="/#capabilities">Capabilities</a>
+                <a href="/#rfq">Get a Quote</a>
+                <a href="/client-dashboard">Client Dashboard</a>
+            </nav>
+        </div>
+
+        <section class="hero">
+            <div class="card">
+                <div class="eyebrow">{{ service.eyebrow }}</div>
+                <h1>{{ service.headline }}</h1>
+                <p>{{ service.intro }}</p>
+                <p>
+                    Primary keyword focus: <strong>{{ service.primary_keyword }}</strong>. Secondary search intent includes {{ service.secondary_keywords|join(', ') }}.
+                </p>
+                <ul>
+                    {% for point in service.points %}
+                    <li>{{ point }}</li>
+                    {% endfor %}
+                </ul>
+                <a class="cta" href="/#rfq">Request a Quote</a>
+            </div>
+            <div class="card hero-visual">
+                <img src="/static/img/cnc-bg.jpg" alt="{{ service.title }}">
+                <div class="hero-overlay"></div>
+            </div>
+        </section>
+
+        <section class="faq-grid">
+            {% for item in service.faq %}
+            <div class="card">
+                <div class="eyebrow">FAQ</div>
+                <h2 style="margin:0 0 10px; font-size:28px;">{{ item.question }}</h2>
+                <p>{{ item.answer }}</p>
+            </div>
+            {% endfor %}
+        </section>
+
+        <section class="footer">
+            <div class="card">
+                <h2 style="margin-top:0;">Talk to ELTA about {{ service.title|lower }}</h2>
+                <p>{{ contact.company_name }} | {{ contact.phone }} | {{ contact.email }}</p>
+                <a class="cta" href="/#rfq">Submit RFQ</a>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

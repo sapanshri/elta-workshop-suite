@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RFQ Inbox | ELTA Workshop Suite</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-wide">
+<div class="card-wide">
+
+<div class="nav-bar">
+    <a href="/" class="nav-btn nav-home">Home</a>
+    <a href="/client-dashboard" class="nav-btn nav-secondary">Client Dashboard</a>
+    <a href="/logout" class="nav-btn nav-secondary">Logout</a>
+</div>
+
+<h1>RFQ Inbox</h1>
+<p>
+    RFQ records are stored on the server and listed here for admin review.
+    SMTP config path: <code>{{ config_hint }}</code><br>
+    Notification log: <code>{{ log_hint }}</code>
+</p>
+
+<table class="inventory-table">
+<thead>
+<tr>
+    <th>Submitted</th>
+    <th>Company</th>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Phone</th>
+    <th>Requirement</th>
+    <th>Material</th>
+    <th>Qty</th>
+    <th>Drawing</th>
+    <th>Message</th>
+    <th>Notification</th>
+</tr>
+</thead>
+<tbody>
+{% for row in rows %}
+<tr>
+    <td>{{ row.submitted_at }}</td>
+    <td>{{ row.company }}</td>
+    <td>{{ row.name }}</td>
+    <td><a href="mailto:{{ row.email }}">{{ row.email }}</a></td>
+    <td>{{ row.phone }}</td>
+    <td>{{ row.requirement_type }}</td>
+    <td>{{ row.material }}</td>
+    <td>{{ row.quantity }}</td>
+    <td>
+        {% if row.drawing_saved_name %}
+        <a href="/admin/rfqs/uploads/{{ row.drawing_saved_name }}">Download</a>
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td>{{ row.message }}</td>
+    <td>
+        <strong>{{ row.notification_status or "skipped" }}</strong><br>
+        <small>{{ row.notification_message or "" }}</small>
+    </td>
+</tr>
+{% endfor %}
+{% if not rows %}
+<tr>
+    <td colspan="11" style="text-align:center;">No RFQs received yet.</td>
+</tr>
+{% endif %}
+</tbody>
+</table>
+
+</div>
+</div>
+</body>
+</html>

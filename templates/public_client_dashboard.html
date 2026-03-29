@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Client Dashboard | ELTA Engineering</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0e1726;
+            --ink-soft: #516072;
+            --steel: #204462;
+            --steel-bright: #2f6d9d;
+            --line: #d7e0e8;
+            --paper: #f3f6f9;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Barlow", sans-serif;
+            background: linear-gradient(180deg, #eff4f8 0%, #f8fbfd 60%, #eef3f7 100%);
+            color: var(--ink);
+        }
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0 24px;
+        }
+        .brand {
+            font-family: "Rajdhani", sans-serif;
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+        .brand small {
+            display: block;
+            font-family: "Barlow", sans-serif;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            color: var(--ink-soft);
+        }
+        .back-link {
+            color: var(--steel);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+        .panel {
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 24px 60px rgba(9, 29, 47, 0.08);
+        }
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--steel-bright);
+            font-weight: 700;
+        }
+        h1 {
+            margin: 12px 0 10px;
+            font-size: clamp(36px, 4vw, 56px);
+            line-height: 0.95;
+        }
+        p {
+            color: var(--ink-soft);
+            line-height: 1.7;
+            font-size: 18px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 24px;
+        }
+        .dash-card {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 22px;
+            background: linear-gradient(180deg, #fff 0%, #f4f8fb 100%);
+        }
+        .dash-card h2 {
+            margin: 0 0 8px;
+            font-size: 22px;
+        }
+        .dash-card a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: var(--steel);
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .contact-card {
+            background: linear-gradient(160deg, #14324c 0%, #0f1d2d 100%);
+            color: var(--white);
+        }
+        .contact-card p, .contact-card li {
+            color: rgba(255,255,255,0.82);
+        }
+        .contact-card ul {
+            padding-left: 18px;
+        }
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">ELTA <small>Engineering Services Pvt. Ltd.</small></div>
+            <a class="back-link" href="/">Back to homepage</a>
+        </div>
+        <div class="hero">
+            <section class="panel">
+                <div class="eyebrow">Client Dashboard</div>
+                <h1>Existing customer? Access your dashboard</h1>
+                <p>
+                    Use the links below to access the read-only customer tools currently available on the ELTA public portal.
+                </p>
+                <div class="dashboard-grid">
+                    <div class="dash-card">
+                        <h2>Material Inventory</h2>
+                        <p>View filtered inward, available quantity, and closed dispatch visibility from the latest synced customer backup.</p>
+                        <a href="/material-inventory">Open Material Inventory</a>
+                    </div>
+                    <div class="dash-card">
+                        <h2>Machine Report</h2>
+                        <p>Review datewise and shiftwise work done on each machine using the latest uploaded production backup data.</p>
+                        <a href="/machine-report">Open Machine Report</a>
+                    </div>
+                </div>
+            </section>
+            <aside class="panel contact-card">
+                <div class="eyebrow">Support</div>
+                <h2 style="margin:12px 0 8px; font-size:32px;">Need help with access or an update?</h2>
+                <p>{{ contact.company_name }}</p>
+                <ul>
+                    <li>{{ contact.phone }}</li>
+                    <li>{{ contact.email }}</li>
+                    <li>{{ contact.address_line_1 }}, {{ contact.address_line_2 }}</li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+</body>
+</html>

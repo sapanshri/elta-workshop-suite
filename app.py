@@ -19,7 +19,7 @@ from modules.maintenance import maintenance_bp
 from modules.breakdown import breakdown_bp
 from modules.machine_history import machine_history_bp
 from modules.complaints import complaints_bp
-from modules.public_inventory import public_inventory_bp, is_public_host
+from modules.public_inventory import public_inventory_bp, is_public_host, render_public_home
 
 import config
 from db import app_data_dir
@@ -52,7 +52,12 @@ PUBLIC_PATHS = {
     "/public/material-inventory",
     "/machine-report",
     "/machine-report/excel",
+    "/client-dashboard",
+    "/rfq-submit",
+    "/robots.txt",
+    "/sitemap.xml",
 }
+PUBLIC_PREFIXES = ("/services/",)
 
 
 @app.before_request
@@ -62,6 +67,8 @@ def enforce_auth():
     if path.startswith("/static/"):
         return
     if path == "/" and is_public_host(request.host):
+        return
+    if any(path.startswith(prefix) for prefix in PUBLIC_PREFIXES):
         return
     if path in PUBLIC_PATHS:
         return
@@ -133,7 +140,7 @@ def logout():
 @app.route("/")
 def home():
     if is_public_host(request.host):
-        return render_template("public_home.html")
+        return render_public_home()
     if app.config.get("LICENSE_ERROR"):
         return render_template("license.html", error=app.config["LICENSE_ERROR"])
     return render_template("home.html")

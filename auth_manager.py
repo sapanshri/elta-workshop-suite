@@ -11,6 +11,7 @@ _CACHE: dict[str, Any] = {"mtime": None, "data": None}
 
 
 PATH_MODULE_MAP = [
+    ("/admin/rfqs", "rfq_admin"),
     ("/tools", "tool_crib"),
     ("/holders", "tool_crib"),
     ("/collets", "tool_crib"),

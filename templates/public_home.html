@@ -1,111 +1,1010 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ELTA Engineering</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ meta_title }}</title>
+    <meta name="description" content="{{ meta_description }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta property="og:title" content="{{ meta_title }}">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:image" content="{{ og_image }}">
+    <meta property="og:site_name" content="ELTA Engineering Services Pvt. Ltd.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ meta_title }}">
+    <meta name="twitter:description" content="{{ meta_description }}">
+    <meta name="twitter:image" content="{{ og_image }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <script type="application/ld+json">{{ schema_json|safe }}</script>
+    <script type="application/ld+json">{{ faq_schema_json|safe }}</script>
     <style>
-        .public-shell {
-            max-width: 1100px;
-            margin: 24px auto 0;
+        :root {
+            --ink: #0f1724;
+            --ink-soft: #556576;
+            --navy: #0e2236;
+            --steel: #204462;
+            --steel-bright: #2f6d9d;
+            --paper: #eef3f7;
+            --paper-deep: #dde7ef;
+            --line: rgba(28, 57, 84, 0.12);
+            --white: #ffffff;
+            --accent: #eaf5ff;
+            --shadow: 0 28px 70px rgba(12, 28, 44, 0.12);
         }
-        .public-nav {
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: "Barlow", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(47, 109, 157, 0.12), transparent 26%),
+                linear-gradient(180deg, #f3f7fa 0%, #f8fbfd 40%, #eef3f7 100%);
+        }
+        a { color: inherit; }
+        img { max-width: 100%; display: block; }
+        .site-shell { overflow: hidden; }
+        .container {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(18px);
+            background: rgba(243, 247, 250, 0.9);
+            border-bottom: 1px solid rgba(17, 30, 43, 0.08);
+        }
+        .header-inner {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 16px;
-            padding: 16px 20px;
-            border: 1px solid #d4dce6;
-            border-radius: 16px;
-            background: #ffffff;
-            box-shadow: 0 8px 24px rgba(20, 40, 60, 0.06);
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 0;
         }
-        .public-brand {
-            font-size: 14px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #4f6173;
+        .brand {
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+        }
+        .brand-mark {
+            font-family: "Rajdhani", sans-serif;
+            font-size: 34px;
+            line-height: 0.9;
+            letter-spacing: 0.12em;
             font-weight: 700;
         }
-        .public-nav-links {
+        .brand-sub {
+            margin-top: 6px;
+            font-size: 11px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+        }
+        .header-nav {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 8px;
             flex-wrap: wrap;
+            justify-content: flex-end;
         }
-        .public-nav-link {
-            display: inline-block;
-            padding: 10px 14px;
-            border-radius: 10px;
+        .header-nav a {
             text-decoration: none;
-            color: #15324d;
-            background: #eef3f8;
-            border: 1px solid #dbe3eb;
             font-weight: 600;
+            color: var(--ink-soft);
+            padding: 10px 12px;
+            border-radius: 999px;
         }
-        .public-nav-link.active {
-            background: #15324d;
-            color: #ffffff;
-            border-color: #15324d;
+        .header-nav a:hover {
+            color: var(--ink);
+            background: rgba(32, 68, 98, 0.08);
         }
-        .public-nav-link.muted {
-            color: #6e7d8b;
-            background: #f6f8fa;
+        .header-nav .cta-primary,
+        .header-nav .cta-primary:hover,
+        .header-nav .cta-primary:visited {
+            color: var(--white);
+        }
+        .header-nav .cta-primary:hover {
+            background: linear-gradient(135deg, #183754 0%, #3d80b2 100%);
+        }
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(20, 46, 70, 0.12);
+        }
+        .cta-primary {
+            background: linear-gradient(135deg, var(--steel) 0%, var(--steel-bright) 100%);
+            color: var(--white);
+        }
+        .cta-secondary {
+            background: var(--white);
+            color: var(--ink);
+            border-color: rgba(18, 42, 66, 0.14);
         }
         .hero {
-            max-width: 760px;
-            margin: 60px auto;
-            padding: 36px;
-            border: 1px solid #d4dce6;
-            border-radius: 18px;
-            background: linear-gradient(180deg, #fbfcfe 0%, #eef3f8 100%);
+            padding: 68px 0 54px;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 32px;
+            align-items: center;
+        }
+        .eyebrow {
+            display: inline-block;
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--steel-bright);
+            margin-bottom: 16px;
+        }
+        .hero h1 {
+            margin: 0 0 18px;
+            font-size: clamp(42px, 6vw, 74px);
+            line-height: 0.94;
+            letter-spacing: -0.03em;
         }
         .hero p {
-            color: #3d4b59;
-            line-height: 1.6;
+            margin: 0;
+            max-width: 680px;
+            font-size: 19px;
+            line-height: 1.72;
+            color: var(--ink-soft);
         }
         .hero-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 22px;
+            gap: 14px;
+            margin: 28px 0 26px;
             flex-wrap: wrap;
         }
-        .hero-kicker {
+        .trust-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .trust-badge {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(32, 68, 98, 0.07);
+            border: 1px solid rgba(32, 68, 98, 0.1);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--steel);
+        }
+        .hero-visual {
+            position: relative;
+            min-height: 540px;
+            border-radius: 34px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            background: linear-gradient(160deg, #10253a 0%, #193853 100%);
+        }
+        .hero-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.78;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(7, 17, 27, 0.06) 0%, rgba(7, 17, 27, 0.48) 100%),
+                linear-gradient(140deg, rgba(46, 110, 159, 0.28), transparent 46%);
+        }
+        .hero-stat {
+            position: absolute;
+            bottom: 18px;
+            left: 18px;
+            right: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .hero-stat-card {
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(9, 22, 35, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--white);
+        }
+        .hero-stat-card strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        .hero-stat-card span {
             font-size: 13px;
-            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.74);
+        }
+        .section {
+            padding: 58px 0;
+        }
+        .section-head {
+            max-width: 720px;
+            margin-bottom: 28px;
+        }
+        .section-kicker {
+            font-size: 12px;
             text-transform: uppercase;
-            color: #5b6b7b;
+            letter-spacing: 0.18em;
+            color: var(--steel-bright);
+            font-weight: 700;
             margin-bottom: 10px;
+        }
+        .section h2 {
+            margin: 0 0 10px;
+            font-size: clamp(30px, 4vw, 46px);
+            line-height: 1.02;
+        }
+        .section-copy {
+            color: var(--ink-soft);
+            font-size: 18px;
+            line-height: 1.72;
+        }
+        .grid-4, .grid-3 {
+            display: grid;
+            gap: 18px;
+        }
+        .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .card {
+            background: rgba(255,255,255,0.84);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(13, 31, 48, 0.06);
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--steel);
+            background: linear-gradient(135deg, rgba(47,109,157,0.16), rgba(32,68,98,0.05));
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+        .card p {
+            margin: 0;
+            color: var(--ink-soft);
+            line-height: 1.68;
+        }
+        .capability-panel {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 22px;
+            align-items: stretch;
+        }
+        .capability-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 14px;
+        }
+        .capability-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.76);
+            border: 1px solid var(--line);
+            color: var(--ink);
+        }
+        .capability-list li::before {
+            content: "•";
+            color: var(--steel-bright);
+            font-size: 26px;
+            line-height: 0.8;
+        }
+        .cta-panel {
+            border-radius: 24px;
+            padding: 28px;
+            background: linear-gradient(160deg, #163550 0%, #0f1d2d 100%);
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+        .cta-panel p {
+            color: rgba(255,255,255,0.76);
+        }
+        .industry-chip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .industry-chip {
+            padding: 18px 20px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,0.82);
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .proof-card {
+            overflow: hidden;
+            padding: 0;
+        }
+        .proof-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+        .proof-card-body {
+            padding: 22px;
+        }
+        .rfq-wrap {
+            display: grid;
+            grid-template-columns: 0.9fr 1.1fr;
+            gap: 24px;
+            align-items: start;
+        }
+        .rfq-info {
+            padding: 30px;
+            border-radius: 24px;
+            background: linear-gradient(160deg, #132f48 0%, #0f1d2d 100%);
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+        .rfq-info p, .rfq-info li {
+            color: rgba(255,255,255,0.78);
+        }
+        .rfq-info ul {
+            padding-left: 18px;
+        }
+        .rfq-form {
+            padding: 28px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.92);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 50px rgba(11, 27, 42, 0.08);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .field.full { grid-column: 1 / -1; }
+        .field label {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(18, 42, 66, 0.14);
+            background: #fdfefe;
+            font: inherit;
+            color: var(--ink);
+        }
+        .field textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        .field input[type="file"] {
+            padding: 10px 12px;
+            background: #f7fafc;
+        }
+        .alert {
+            margin-bottom: 16px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+        .alert-success {
+            background: #eaf7ee;
+            color: #14653a;
+            border: 1px solid #bfe2ca;
+        }
+        .alert-error {
+            background: #fff1f1;
+            color: #932828;
+            border: 1px solid #efc3c3;
+        }
+        .dashboard-section {
+            padding: 28px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(233, 241, 248, 0.95) 100%);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 50px rgba(11, 27, 42, 0.08);
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+        .dashboard-card {
+            padding: 20px;
+            border-radius: 18px;
+            background: var(--white);
+            border: 1px solid rgba(18, 42, 66, 0.12);
+        }
+        .dashboard-card a {
+            display: inline-flex;
+            margin-top: 12px;
+            font-weight: 700;
+            color: var(--steel);
+            text-decoration: none;
+        }
+        .about-layout,
+        .final-cta {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+        .metric-card {
+            padding: 24px;
+            border-radius: 20px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(232,240,246,0.9));
+            border: 1px solid var(--line);
+        }
+        .metric-card strong {
+            display: block;
+            font-size: 40px;
+            line-height: 1;
+            margin-bottom: 8px;
+            color: var(--steel);
+        }
+        .footer {
+            margin-top: 40px;
+            padding: 36px 0 48px;
+            background: #101b28;
+            color: rgba(255,255,255,0.76);
+        }
+        .map-card {
+            padding: 0;
+            overflow: hidden;
+        }
+        .map-card-header {
+            padding: 24px 24px 12px;
+        }
+        .map-frame {
+            width: 100%;
+            min-height: 320px;
+            border: 0;
+            display: block;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 0.9fr 0.8fr 0.9fr;
+            gap: 24px;
+        }
+        .footer h3 {
+            margin: 0 0 12px;
+            color: var(--white);
+            font-size: 18px;
+        }
+        .footer a {
+            color: rgba(255,255,255,0.76);
+            text-decoration: none;
+        }
+        .footer-links {
+            display: grid;
+            gap: 8px;
+        }
+        .floating-whatsapp {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 42;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: #10b15d;
+            color: var(--white);
+            font-size: 26px;
+            box-shadow: 0 18px 34px rgba(16, 177, 93, 0.34);
+        }
+        @media (max-width: 1080px) {
+            .hero-grid,
+            .capability-panel,
+            .rfq-wrap,
+            .about-layout,
+            .final-cta,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .grid-3,
+            .industry-chip-grid,
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-visual {
+                min-height: 420px;
+            }
+        }
+        @media (max-width: 780px) {
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-nav {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .grid-4 { grid-template-columns: 1fr; }
+            .hero-stat {
+                grid-template-columns: 1fr;
+            }
+            .hero {
+                padding-top: 36px;
+            }
+            .floating-whatsapp {
+                width: 54px;
+                height: 54px;
+                right: 14px;
+                bottom: 14px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="page-wide">
-    <div class="public-shell">
-        <div class="public-nav">
-            <div class="public-brand">ELTA Engineering Public Portal</div>
-            <div class="public-nav-links">
-                <a href="/" class="public-nav-link active">Home</a>
-                <a href="/material-inventory" class="public-nav-link">Material Inventory</a>
-                <a href="/machine-report" class="public-nav-link">Machine Report</a>
-            </div>
+<div class="site-shell" id="top">
+    <header class="sticky-header">
+        <div class="container header-inner">
+            <a href="/" class="brand" aria-label="ELTA Engineering Services Pvt. Ltd.">
+                <span class="brand-mark">ELTA</span>
+                <span class="brand-sub">Engineering Services Pvt. Ltd.</span>
+            </a>
+            <nav class="header-nav" aria-label="Primary">
+                {% for link in content.nav_links %}
+                <a href="{{ link.href }}">{{ link.label }}</a>
+                {% endfor %}
+                <a href="#rfq" class="cta cta-primary">Get a Quote</a>
+            </nav>
         </div>
+    </header>
 
-        <div class="hero">
-            <div class="hero-kicker">ELTA Engineering</div>
-            <h1>Workshop Inventory Access</h1>
-            <p>
-                This website provides read-only access to selected workshop data sourced
-                from the latest desktop database backup uploaded to the server.
-            </p>
-            <p>
-                Additional public pages and reports can be added to this top navigation
-                without exposing any edit or transaction features.
-            </p>
-            <div class="hero-actions">
-                <a href="/material-inventory" class="nav-btn nav-primary">Open Material Inventory</a>
-                <a href="/machine-report" class="nav-btn nav-secondary">Open Machine Report</a>
+    <main>
+        <section class="hero">
+            <div class="container hero-grid">
+                <div>
+                    <span class="eyebrow">Nashik, India | Precision Manufacturing Partner</span>
+                    <h1>Precision CNC Machining &amp; Engineering Solutions</h1>
+                    <p>
+                        ELTA Engineering supports industrial customers with precision machining, development components, production parts, and engineering-focused manufacturing support. From drawing review to finished part delivery, we help turn requirements into reliable outcomes.
+                    </p>
+                    <p style="margin-top:16px;">
+                        {{ content.seo_intro }}
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#rfq" class="cta cta-primary">Get a Quote</a>
+                        <a href="#capabilities" class="cta cta-secondary">View Capabilities</a>
+                    </div>
+                    <div class="trust-row" aria-label="Trust badges">
+                        {% for badge in content.trust_badges %}
+                        <span class="trust-badge">{{ badge }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <img src="/static/img/cnc-bg.jpg" alt="Precision CNC machining center with metal component setup">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-card">
+                            <strong>Development</strong>
+                            <span>Engineering-driven support for validation and pre-production parts.</span>
+                        </div>
+                        <div class="hero-stat-card">
+                            <strong>Production</strong>
+                            <span>Reliable machining response for repeat industrial requirements.</span>
+                        </div>
+                        <div class="hero-stat-card">
+                            <strong>Support</strong>
+                            <span>CAD / CAE coordination and practical manufacturing assistance.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="why-elta">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">Why ELTA</div>
+                    <h2>Why customers choose ELTA</h2>
+                    <div class="section-copy">
+                        ELTA is positioned for industrial customers who need machining support backed by engineering thinking, practical communication, and accountable delivery.
+                    </div>
+                </div>
+                <div class="grid-4">
+                    {% for item in content.why_choose %}
+                    <article class="card">
+                        <div class="card-icon">{{ loop.index }}</div>
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.copy }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="services">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">Services</div>
+                    <h2>What we do</h2>
+                    <div class="section-copy">
+                        Public-facing service coverage for customers looking for machining capability, engineering support, and cost-effective execution from prototype to production.
+                    </div>
+                </div>
+                <div class="grid-3">
+                    {% for item in content.services %}
+                    <article class="card">
+                        <div class="card-icon">0{{ loop.index }}</div>
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.copy }}</p>
+                        <a href="{{ item.href }}" style="display:inline-flex; margin-top:16px; font-weight:700; color:var(--steel); text-decoration:none;">Learn more</a>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="capabilities">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">Capability Snapshot</div>
+                    <h2>Built for engineering-led manufacturing support</h2>
+                    <div class="section-copy">
+                        The points below are intentionally easy to edit as ELTA expands capability language, machine coverage, and target customer requirements.
+                    </div>
+                </div>
+                <div class="capability-panel">
+                    <ul class="capability-list">
+                        {% for item in content.capabilities %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    <aside class="cta-panel">
+                        <div class="section-kicker" style="color: rgba(255,255,255,0.62);">RFQ Ready</div>
+                        <h3 style="margin: 0 0 12px; font-size: 28px;">Send your machining requirement for review</h3>
+                        <p>
+                            Share your drawing, quantity, and part requirement. ELTA can respond with a machining-oriented review and next-step discussion.
+                        </p>
+                        <a href="#rfq" class="cta cta-primary" style="width:100%;">Request an RFQ Review</a>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="industries">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">Industries Served</div>
+                    <h2>Industrial sectors where ELTA can add value</h2>
+                    <div class="section-copy">
+                        ELTA’s positioning is relevant to customers in equipment manufacturing, industrial systems, and engineering-driven component supply.
+                    </div>
+                </div>
+                <div class="industry-chip-grid">
+                    {% for item in content.industries %}
+                    <div class="industry-chip">{{ item }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="proof">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">Featured Work</div>
+                    <h2>Machined parts and engineering support that build trust</h2>
+                    <div class="section-copy">
+                        Use this section as public proof of the type of work ELTA supports. It can later be replaced with real project photography and customer-approved case highlights.
+                    </div>
+                </div>
+                <div class="grid-3">
+                    {% for item in content.featured_work %}
+                    <article class="card proof-card">
+                        <img src="/static/img/cnc-bg.jpg" alt="{{ item.alt }}">
+                        <div class="proof-card-body">
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.copy }}</p>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="rfq">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">RFQ</div>
+                    <h2>Upload your drawing. Get a machining response.</h2>
+                    <div class="section-copy">
+                        Submit part details, quantity, and your drawing file. The form supports engineering-style enquiry capture for machining review and follow-up.
+                    </div>
+                </div>
+                <div class="rfq-wrap">
+                    <aside class="rfq-info">
+                        <div class="section-kicker" style="color: rgba(255,255,255,0.62);">How ELTA responds</div>
+                        <h3 style="margin:0 0 12px; font-size:30px;">Engineering-focused quote support</h3>
+                        <p>
+                            Customers typically approach ELTA when the requirement needs more than a commodity job-work response.
+                        </p>
+                        <ul>
+                            <li>Drawing review and manufacturability understanding</li>
+                            <li>Requirement clarification for machining and material planning</li>
+                            <li>Support for prototypes, development lots, and production quantities</li>
+                            <li>Practical response on cost, lead time, and process suitability</li>
+                        </ul>
+                    </aside>
+                    <div class="rfq-form">
+                        {% if rfq_success %}
+                        <div class="alert alert-success">Your RFQ was submitted successfully. ELTA can review the requirement and respond using the details you shared.</div>
+                        {% endif %}
+                        {% if rfq_errors %}
+                        <div class="alert alert-error">
+                            {% for item in rfq_errors %}
+                            <div>{{ item }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <form method="post" action="/rfq-submit" enctype="multipart/form-data">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="name">Name</label>
+                                    <input id="name" name="name" value="{{ rfq_form.get('name', '') }}" required>
+                                </div>
+                                <div class="field">
+                                    <label for="company">Company</label>
+                                    <input id="company" name="company" value="{{ rfq_form.get('company', '') }}" required>
+                                </div>
+                                <div class="field">
+                                    <label for="email">Email</label>
+                                    <input id="email" name="email" type="email" value="{{ rfq_form.get('email', '') }}" required>
+                                </div>
+                                <div class="field">
+                                    <label for="phone">Phone</label>
+                                    <input id="phone" name="phone" value="{{ rfq_form.get('phone', '') }}">
+                                </div>
+                                <div class="field">
+                                    <label for="requirement_type">Requirement Type</label>
+                                    <select id="requirement_type" name="requirement_type" required>
+                                        <option value="">Select requirement</option>
+                                        {% for item in ["Prototype Part", "Development Component", "Production Part", "Heavy Machining", "CAD / CAE Support", "Cost-down Review"] %}
+                                        <option value="{{ item }}" {% if rfq_form.get('requirement_type') == item %}selected{% endif %}>{{ item }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="material">Material</label>
+                                    <input id="material" name="material" value="{{ rfq_form.get('material', '') }}" placeholder="EN8, SS304, Aluminium, CI, etc.">
+                                </div>
+                                <div class="field">
+                                    <label for="quantity">Quantity</label>
+                                    <input id="quantity" name="quantity" value="{{ rfq_form.get('quantity', '') }}">
+                                </div>
+                                <div class="field">
+                                    <label for="drawing_file">Upload Drawing</label>
+                                    <input id="drawing_file" name="drawing_file" type="file" accept=".pdf,.step,.stp,.igs,.iges,.dxf,.dwg,.zip,.rar,.png,.jpg,.jpeg">
+                                </div>
+                                <div class="field full">
+                                    <label for="message">Message</label>
+                                    <textarea id="message" name="message" placeholder="Share part application, tolerances, batch expectation, finish requirement, or timeline details.">{{ rfq_form.get('message', '') }}</textarea>
+                                </div>
+                            </div>
+                            <div style="margin-top:18px; display:flex; gap:14px; flex-wrap:wrap;">
+                                <button class="cta cta-primary" type="submit">Submit RFQ</button>
+                                <a href="mailto:{{ contact.email }}" class="cta cta-secondary">Email ELTA Directly</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="dashboard">
+            <div class="container">
+                <div class="dashboard-section">
+                    <div class="section-head" style="margin-bottom:0;">
+                        <div class="section-kicker">Client Access</div>
+                        <h2>Existing customer? Access your dashboard</h2>
+                        <div class="section-copy">
+                            Existing read-only customer tools remain available. Use the dedicated dashboard route or jump directly into the pages below.
+                        </div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Client Dashboard</h3>
+                            <p>Single access point for the current customer-facing tools hosted on the public site.</p>
+                            <a href="/client-dashboard">Open Client Dashboard</a>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Material Inventory</h3>
+                            <p>Review customer challan status, inward quantities, available quantities, and closed dispatch visibility.</p>
+                            <a href="/material-inventory">Open Material Inventory</a>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Machine Report</h3>
+                            <p>Review machine-wise datewise and shiftwise work done based on the latest synced backup.</p>
+                            <a href="/machine-report">Open Machine Report</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="about">
+            <div class="container about-layout">
+                <div>
+                    <div class="section-head">
+                        <div class="section-kicker">About ELTA</div>
+                        <h2>Engineering-led machining support from Nashik</h2>
+                        <div class="section-copy">
+                            ELTA Engineering Services Pvt. Ltd. is positioned as a precision CNC machining and engineering support partner for industrial customers in India and beyond.
+                        </div>
+                    </div>
+                    <div style="display:grid; gap:16px;">
+                        {% for item in content.about_points %}
+                        <div class="card" style="padding:20px 22px;">{{ item }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div style="display:grid; gap:16px;">
+                    <div class="metric-card">
+                        <strong>Nashik</strong>
+                        <span>Manufacturing base for industrial customer response and engineering support.</span>
+                    </div>
+                    <div class="metric-card">
+                        <strong>Prototype to Production</strong>
+                        <span>Support for development lots, validation parts, and repeat batch machining.</span>
+                    </div>
+                    <div class="metric-card">
+                        <strong>CAD / CAE + CNC</strong>
+                        <span>Engineering support combined with practical machining execution.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="faq">
+            <div class="container">
+                <div class="section-head">
+                    <div class="section-kicker">FAQ</div>
+                    <h2>Questions industrial buyers commonly ask</h2>
+                    <div class="section-copy">
+                        This FAQ section helps buyers and also improves the homepage’s ability to rank for service, location, and manufacturing support queries.
+                    </div>
+                </div>
+                <div class="grid-3">
+                    {% for item in content.faq %}
+                    <article class="card">
+                        <h3>{{ item.question }}</h3>
+                        <p>{{ item.answer }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="contact">
+            <div class="container final-cta">
+                <div class="cta-panel">
+                    <div class="section-kicker" style="color: rgba(255,255,255,0.62);">Next Step</div>
+                    <h2 style="margin:0 0 14px; color:#fff;">Need a machining partner who can think through the requirement?</h2>
+                    <p>
+                        Share your part drawing, quantity, and timeline. ELTA can review the requirement and respond with a machining-oriented discussion.
+                    </p>
+                    <div class="hero-actions" style="margin: 20px 0 0;">
+                        <a href="#rfq" class="cta cta-primary">Get a Quote</a>
+                        <a href="mailto:{{ contact.email }}" class="cta cta-secondary">Contact ELTA</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin:0 0 12px; font-size:28px;">Contact details</h3>
+                    <p style="margin:0 0 12px;">{{ contact.company_name }}</p>
+                    <p style="margin:0 0 12px;">{{ contact.address_line_1 }}<br>{{ contact.address_line_2 }}</p>
+                    <p style="margin:0 0 6px;"><strong>Phone:</strong> {{ contact.phone }}</p>
+                    <p style="margin:0 0 6px;"><strong>Email:</strong> <a href="mailto:{{ contact.email }}">{{ contact.email }}</a></p>
+                    <p style="margin:0;"><strong>WhatsApp:</strong> <a href="{{ contact.whatsapp_url }}" target="_blank" rel="noopener">{{ contact.whatsapp_number }}</a></p>
+                </div>
+            </div>
+            <div class="container" style="margin-top:24px;">
+                <div class="card map-card">
+                    <div class="map-card-header">
+                        <div class="section-kicker">Reach Us</div>
+                        <h3 style="margin:0 0 8px; font-size:28px;">ELTA Engineering location</h3>
+                        <p class="section-copy" style="margin:0;">Use the map below to navigate to ELTA Engineering Services Pvt. Ltd. in Nashik.</p>
+                    </div>
+                    <iframe
+                        class="map-frame"
+                        title="ELTA Engineering Services Pvt. Ltd. map location"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://maps.google.com/maps?q={{ contact.map_query|urlencode }}&amp;t=&amp;z=15&amp;ie=UTF8&amp;iwloc=&amp;output=embed">
+                    </iframe>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div>
+                <h3>{{ contact.company_name }}</h3>
+                <div style="line-height:1.8;">
+                    Precision CNC machining, engineering support, development components, and production part response from Nashik, India.
+                </div>
+            </div>
+            <div>
+                <h3>Navigation</h3>
+                <div class="footer-links">
+                    {% for link in content.nav_links[:6] %}
+                    <a href="{{ link.href }}">{{ link.label }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <h3>Dashboard</h3>
+                <div class="footer-links">
+                    <a href="/client-dashboard">Client Dashboard</a>
+                    <a href="/material-inventory">Material Inventory</a>
+                    <a href="/machine-report">Machine Report</a>
+                </div>
+            </div>
+            <div>
+                <h3>Contact</h3>
+                <div class="footer-links">
+                    <a href="tel:{{ contact.phone|replace(' ', '') }}">{{ contact.phone }}</a>
+                    <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>
+                    <a href="{{ contact.linkedin_url }}" target="_blank" rel="noopener">LinkedIn</a>
+                    <a href="{{ contact.whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>
+                </div>
             </div>
         </div>
-    </div>
+    </footer>
+
+    <a class="floating-whatsapp" href="{{ contact.whatsapp_url }}" target="_blank" rel="noopener" aria-label="Chat with ELTA on WhatsApp">W</a>
 </div>
 </body>
 </html>
