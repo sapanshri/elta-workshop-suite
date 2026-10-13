@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Client Dashboard | ELTA Engineering</title>
+    <link rel="icon" href="/static/img/elta-logo.png" type="image/png">
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,18 +38,23 @@
             gap: 16px;
             padding: 16px 0 24px;
         }
-        .brand {
-            font-family: "Rajdhani", sans-serif;
-            font-size: 34px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-        }
-        .brand small {
+        .brand-logo {
             display: block;
-            font-family: "Barlow", sans-serif;
-            font-size: 12px;
-            letter-spacing: 0.18em;
+            width: auto;
+            height: 70px;
+            object-fit: contain;
+        }
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .client-email {
             color: var(--ink-soft);
+            font-size: 14px;
+            font-weight: 700;
         }
         .back-link {
             color: var(--steel);
@@ -130,8 +136,12 @@
 <body>
     <div class="wrap">
         <div class="topbar">
-            <div class="brand">ELTA <small>Engineering Services Pvt. Ltd.</small></div>
-            <a class="back-link" href="/">Back to homepage</a>
+            <div class="brand"><img src="/static/img/elta-logo.png" alt="ELTA Engineering Services Pvt. Ltd." class="brand-logo"></div>
+            <div class="top-actions">
+                {% if public_client_email %}<span class="client-email">{{ public_client_email }}</span>{% endif %}
+                <a class="back-link" href="/client-logout">Logout</a>
+                <a class="back-link" href="/">Back to homepage</a>
+            </div>
         </div>
         <div class="hero">
             <section class="panel">

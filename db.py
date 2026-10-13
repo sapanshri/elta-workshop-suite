@@ -274,10 +274,24 @@ def init_db():
             remarks TEXT
         );
 
+        CREATE TABLE IF NOT EXISTS material_inhouse_stock (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_code TEXT NOT NULL,
+            process TEXT,
+            stock_date DATE NOT NULL,
+            batch_no TEXT,
+            produced_qty INTEGER NOT NULL,
+            available_qty INTEGER NOT NULL,
+            remarks TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS material_dispatch (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            challan_id INTEGER NOT NULL,
-            inward_id INTEGER NOT NULL,
+            challan_id INTEGER,
+            inward_id INTEGER,
+            source_type TEXT DEFAULT 'INWARD',
+            source_id INTEGER,
             elta_challan_no TEXT NOT NULL,
             dispatch_date DATE NOT NULL,
             ok_qty INTEGER DEFAULT 0,
@@ -496,6 +510,10 @@ def init_db():
         add_column_safe("ALTER TABLE item_code_ppap_docs ADD COLUMN version_no INTEGER DEFAULT 1")
         add_column_safe("ALTER TABLE item_code_ppap_docs ADD COLUMN is_current INTEGER DEFAULT 1")
         add_column_safe("ALTER TABLE shift_production ADD COLUMN setup_no TEXT")
+        add_column_safe("ALTER TABLE material_dispatch ADD COLUMN source_type TEXT DEFAULT 'INWARD'")
+        add_column_safe("ALTER TABLE material_dispatch ADD COLUMN source_id INTEGER")
+
+        _fix_material_dispatch_schema(con)
 
         # 3) Fix wrong FK (item_codes -> item_code_master)
         # IMPORTANT: _fix_ppap_fk(con) must NOT close/commit the connection
@@ -523,6 +541,66 @@ def init_db():
     finally:
         con.close()
     
+
+def _fix_material_dispatch_schema(con):
+    cols = con.execute("PRAGMA table_info(material_dispatch)").fetchall()
+    if not cols:
+        return
+
+    col_map = {c[1]: c for c in cols}
+    needs_rebuild = (
+        "source_type" not in col_map
+        or "source_id" not in col_map
+        or bool(col_map.get("challan_id", [None, None, None, 0])[3])
+        or bool(col_map.get("inward_id", [None, None, None, 0])[3])
+    )
+
+    if not needs_rebuild:
+        con.execute("""
+            UPDATE material_dispatch
+            SET source_type = COALESCE(NULLIF(source_type, ''), 'INWARD'),
+                source_id = COALESCE(source_id, inward_id)
+            WHERE source_type IS NULL OR source_type='' OR source_id IS NULL
+        """)
+        return
+
+    has_source_type = "source_type" in col_map
+    has_source_id = "source_id" in col_map
+    source_type_expr = "COALESCE(NULLIF(source_type, ''), 'INWARD')" if has_source_type else "'INWARD'"
+    source_id_expr = "COALESCE(source_id, inward_id)" if has_source_id else "inward_id"
+
+    con.execute("PRAGMA foreign_keys=OFF")
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS material_dispatch_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challan_id INTEGER,
+            inward_id INTEGER,
+            source_type TEXT DEFAULT 'INWARD',
+            source_id INTEGER,
+            elta_challan_no TEXT NOT NULL,
+            dispatch_date DATE NOT NULL,
+            ok_qty INTEGER DEFAULT 0,
+            rej_qty INTEGER DEFAULT 0,
+            cd_qty INTEGER DEFAULT 0,
+            nd_qty INTEGER DEFAULT 0,
+            nd_pw_qty INTEGER DEFAULT 0,
+            total_qty INTEGER NOT NULL,
+            remarks TEXT
+        )
+    """)
+    con.execute(f"""
+        INSERT INTO material_dispatch_new
+        (id, challan_id, inward_id, source_type, source_id, elta_challan_no, dispatch_date,
+         ok_qty, rej_qty, cd_qty, nd_qty, nd_pw_qty, total_qty, remarks)
+        SELECT
+            id, challan_id, inward_id, {source_type_expr}, {source_id_expr}, elta_challan_no, dispatch_date,
+            ok_qty, rej_qty, cd_qty, nd_qty, nd_pw_qty, total_qty, remarks
+        FROM material_dispatch
+    """)
+    con.execute("DROP TABLE material_dispatch")
+    con.execute("ALTER TABLE material_dispatch_new RENAME TO material_dispatch")
+    con.execute("PRAGMA foreign_keys=ON")
+
 
 def _fix_ppap_fk(con):
     cur = con.cursor()

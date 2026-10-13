@@ -11,6 +11,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ canonical_url }}">
     <meta property="og:image" content="{{ og_image }}">
+    <link rel="icon" href="/static/img/elta-logo.png" type="image/png">
     <meta name="keywords" content="{{ service.primary_keyword }}, {{ service.secondary_keywords|join(', ') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,12 +46,15 @@
             padding: 18px 0;
         }
         .brand {
-            font-family: "Rajdhani", sans-serif;
-            font-size: 34px;
-            font-weight: 700;
+            display: flex;
+            align-items: center;
             text-decoration: none;
-            color: var(--ink);
-            letter-spacing: 0.1em;
+        }
+        .brand-logo {
+            display: block;
+            width: auto;
+            height: 56px;
+            object-fit: contain;
         }
         .nav {
             display: flex;
@@ -151,7 +155,7 @@
 <body>
     <div class="container">
         <div class="topbar">
-            <a class="brand" href="/">ELTA</a>
+            <a class="brand" href="/" aria-label="ELTA Engineering Services Pvt. Ltd."><img src="/static/img/elta-logo.png" alt="ELTA Engineering Services Pvt. Ltd." class="brand-logo"></a>
             <nav class="nav">
                 <a href="/">Home</a>
                 <a href="/#services">Services</a>

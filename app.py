@@ -24,6 +24,12 @@ from modules.public_inventory import public_inventory_bp, is_public_host, render
 import config
 from db import app_data_dir
 from auth_manager import verify_user, role_can_access, module_for_path
+from public_client_auth import (
+    PROTECTED_CLIENT_PATHS,
+    public_client_auth_bp,
+    public_client_email,
+    public_client_is_authenticated,
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("ELTA_SECRET_KEY", "elta-change-me-secret")
@@ -48,11 +54,10 @@ init_db()
 
 PUBLIC_PATHS = {
     "/login",
-    "/material-inventory",
-    "/public/material-inventory",
-    "/machine-report",
-    "/machine-report/excel",
-    "/client-dashboard",
+    "/client-login",
+    "/client-logout",
+    "/client-auth/google/start",
+    "/client-auth/google/callback",
     "/rfq-submit",
     "/robots.txt",
     "/sitemap.xml",
@@ -66,6 +71,10 @@ def enforce_auth():
 
     if path.startswith("/static/"):
         return
+    if is_public_host(request.host) and path in PROTECTED_CLIENT_PATHS:
+        if public_client_is_authenticated():
+            return
+        return redirect(url_for("public_client_auth.client_login", next=path))
     if path == "/" and is_public_host(request.host):
         return
     if any(path.startswith(prefix) for prefix in PUBLIC_PREFIXES):
@@ -90,6 +99,7 @@ def inject_auth_context():
     return {
         "current_user": session.get("username"),
         "current_role": role,
+        "public_client_email": public_client_email(),
         "can_access": lambda module_key: role_can_access(role, module_key),
     }
 
@@ -163,6 +173,7 @@ app.register_blueprint(maintenance_bp)
 app.register_blueprint(breakdown_bp)
 app.register_blueprint(machine_history_bp)
 app.register_blueprint(complaints_bp)
+app.register_blueprint(public_client_auth_bp)
 app.register_blueprint(public_inventory_bp)
 
 if __name__ == "__main__":

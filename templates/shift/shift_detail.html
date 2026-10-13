@@ -18,6 +18,11 @@
 
 <div class="nav-bar no-print">
     <a href="/shift/view" class="nav-btn nav-secondary">⬅ Back</a>
+    {% if current_role == "Admin" %}
+    <a href="{{ url_for('shift.shift_edit', shift_id=header.id) }}" class="nav-btn nav-primary">
+        Edit
+    </a>
+    {% endif %}
     <button onclick="window.print()" class="nav-btn nav-primary">
         🖨 Print / PDF
     </button>

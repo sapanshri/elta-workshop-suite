@@ -27,7 +27,7 @@
   },
   "users": {
     "admin": {
-      "password_hash": "scrypt:32768:8:1$Wu4zqVyHJZRJHJwB$4b66e58a65547841834d6cd0c9ede0553dbbe148b330e115b86c7db840e49f8504d009f6040f73cf65b42d8d95d83b350aceb9796e652dc952c5d0ef5eeb9458",
+      "password_hash": "scrypt:32768:8:1$gAEivxorHDYXwhlM$906c2cc5a61c160a932e345345385050b706bcdf986071c1e42bf66b7ade8ab111be958992d414aa81fb18f9ca4b5425beb78b8d2149a79fd943a177e52c719f",
       "role": "Admin"
     },
     "production": {

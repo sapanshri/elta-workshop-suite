@@ -3,6 +3,7 @@
 <head>
     <title>ELTA Machine Report</title>
     <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="/static/img/elta-logo.png" type="image/png">
     <link rel="stylesheet" href="/static/style.css">
     <style>
         .public-shell {
@@ -22,11 +23,15 @@
             margin-bottom: 18px;
         }
         .public-brand {
-            font-size: 14px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #4f6173;
-            font-weight: 700;
+            display: flex;
+            align-items: center;
+            min-width: 88px;
+        }
+        .public-logo {
+            display: block;
+            width: auto;
+            height: 46px;
+            object-fit: contain;
         }
         .public-nav-links {
             display: flex;
@@ -73,17 +78,25 @@
             border: 1px solid #e2b5b5;
             color: #8b1e1e;
         }
+        .client-email {
+            align-self: center;
+            color: #5f7081;
+            font-size: 13px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
 <div class="page-wide">
 <div class="public-shell">
 <div class="public-nav">
-    <div class="public-brand">ELTA Engineering Public Portal</div>
+    <a href="/client-dashboard" class="public-brand" aria-label="ELTA Engineering Client Dashboard"><img src="/static/img/elta-logo.png" alt="ELTA Engineering Services Pvt. Ltd." class="public-logo"></a>
     <div class="public-nav-links">
         <a href="/" class="public-nav-link">Home</a>
         <a href="/client-dashboard" class="public-nav-link">Client Dashboard</a>
         <a href="/material-inventory" class="public-nav-link">Material Inventory</a>
+        {% if public_client_email %}<span class="client-email">{{ public_client_email }}</span>{% endif %}
+        <a href="/client-logout" class="public-nav-link muted">Logout</a>
         <a href="/machine-report" class="public-nav-link active">Machine Report</a>
     </div>
 </div>

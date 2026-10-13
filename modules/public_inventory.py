@@ -23,6 +23,14 @@ public_inventory_bp = Blueprint("public_inventory", __name__)
 
 PUBLIC_HOSTS = {"eltaengineering.com", "www.eltaengineering.com"}
 BACKUP_PATTERN = "workshop_*.db.gz"
+PUBLIC_REQUIRED_TABLES = {
+    "customer_master",
+    "customer_challan",
+    "material_inward",
+    "shift_header",
+    "shift_production",
+    "machine_master",
+}
 RFQ_EMAIL_CONFIG_FILE = Path(__file__).resolve().parent.parent / "rfq_email_config.json"
 RFQ_EMAIL_CONFIG_EXAMPLE = Path(__file__).resolve().parent.parent / "rfq_email_config.json.example"
 RFQ_ALLOWED_EXTS = {
@@ -421,6 +429,15 @@ def _latest_backup_file() -> Path | None:
     return max(backups, key=lambda p: p.stat().st_mtime)
 
 
+def _backup_files_newest_first() -> list[Path]:
+    source_dir = _backup_source_dir()
+    if source_dir is None:
+        return []
+
+    backups = [p for p in source_dir.glob(BACKUP_PATTERN) if p.is_file()]
+    return sorted(backups, key=lambda p: p.stat().st_mtime, reverse=True)
+
+
 def _public_cache_dir() -> Path:
     cache_dir = Path(app_data_dir()) / "public_inventory_cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -428,14 +445,13 @@ def _public_cache_dir() -> Path:
 
 
 def _restore_latest_backup() -> tuple[Path | None, Path | None]:
-    backup_file = _latest_backup_file()
-    if backup_file is None:
+    backup_files = _backup_files_newest_first()
+    if not backup_files:
         return None, None
 
     cache_dir = _public_cache_dir()
     restored_db = cache_dir / "latest_public_inventory.db"
     stamp_file = cache_dir / "latest_public_inventory.stamp"
-    current_stamp = f"{backup_file.name}:{int(backup_file.stat().st_mtime)}"
 
     cached_stamp = ""
     if stamp_file.exists():
@@ -444,15 +460,51 @@ def _restore_latest_backup() -> tuple[Path | None, Path | None]:
         except Exception:
             cached_stamp = ""
 
-    if restored_db.exists() and cached_stamp == current_stamp:
-        return restored_db, backup_file
+    for backup_file in backup_files:
+        if backup_file.stat().st_size <= 0:
+            continue
 
-    tmp_db = cache_dir / "latest_public_inventory.tmp"
-    with gzip.open(backup_file, "rb") as src, tmp_db.open("wb") as dst:
-        shutil.copyfileobj(src, dst)
-    tmp_db.replace(restored_db)
-    stamp_file.write_text(current_stamp, encoding="utf-8")
-    return restored_db, backup_file
+        current_stamp = f"{backup_file.name}:{int(backup_file.stat().st_mtime)}"
+        if restored_db.exists() and cached_stamp == current_stamp and _db_has_public_tables(restored_db):
+            return restored_db, backup_file
+
+        tmp_db = cache_dir / "latest_public_inventory.tmp"
+        try:
+            with gzip.open(backup_file, "rb") as src, tmp_db.open("wb") as dst:
+                shutil.copyfileobj(src, dst)
+            if not _db_has_public_tables(tmp_db):
+                continue
+            tmp_db.replace(restored_db)
+            stamp_file.write_text(current_stamp, encoding="utf-8")
+            return restored_db, backup_file
+        except Exception:
+            continue
+        finally:
+            try:
+                if tmp_db.exists():
+                    tmp_db.unlink()
+            except Exception:
+                pass
+
+    return None, None
+
+
+def _db_has_public_tables(db_path: Path) -> bool:
+    try:
+        con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            rows = con.execute("""
+                SELECT name
+                FROM sqlite_master
+                WHERE type='table'
+            """).fetchall()
+        finally:
+            con.close()
+    except Exception:
+        return False
+
+    table_names = {row[0] for row in rows}
+    return PUBLIC_REQUIRED_TABLES.issubset(table_names)
 
 
 def _open_public_db() -> tuple[sqlite3.Connection | None, Path | None]:
@@ -872,6 +924,9 @@ def public_robots():
         "User-agent: *",
         "Allow: /",
         "Disallow: /client-dashboard",
+        "Disallow: /client-login",
+        "Disallow: /client-auth/",
+        "Disallow: /client-logout",
         "Disallow: /material-inventory",
         "Disallow: /public/material-inventory",
         "Disallow: /machine-report",

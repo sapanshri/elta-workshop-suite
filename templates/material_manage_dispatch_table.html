@@ -2,8 +2,9 @@
   <thead>
     <tr>
       <th>#</th>
+      <th>Source</th>
       <th>Customer</th>
-      <th>Cust Challan</th>
+      <th>Cust Challan / Batch</th>
       <th>Cust Date</th>
       <th>ELTA Challan</th>
       <th>Dispatch Date</th>
@@ -23,6 +24,7 @@
   {% for r in rows %}
     <tr>
       <td>{{ loop.index }}</td>
+      <td>{{ 'In-house' if r.source_type == 'INHOUSE' else 'Inward' }}</td>
       <td>{{ r.customer_name }}</td>
       <td><b>{{ r.customer_challan_no }}</b></td>
       <td>{{ r.customer_challan_date }}</td>
@@ -52,12 +54,16 @@
                 onclick="saveDispatchRow(this, {{ r.id }})">
           Save
         </button>
+        <button type="button" class="nav-btn nav-danger" style="margin-left:6px;"
+                onclick="deleteDispatchRow(this, {{ r.id }})">
+          Delete
+        </button>
       </td>
     </tr>
   {% endfor %}
 
   {% if rows|length == 0 %}
-    <tr><td colspan="15" style="color:#777;">No dispatch rows found.</td></tr>
+    <tr><td colspan="16" style="color:#777;">No dispatch rows found.</td></tr>
   {% endif %}
   </tbody>
 </table>

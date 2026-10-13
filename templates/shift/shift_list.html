@@ -39,6 +39,12 @@
        class="nav-btn nav-secondary">
         View
     </a>
+    {% if current_role == "Admin" %}
+    <a href="{{ url_for('shift.shift_edit', shift_id=r.id) }}"
+       class="nav-btn nav-primary">
+        Edit
+    </a>
+    {% endif %}
 
 
     </td>

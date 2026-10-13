@@ -33,10 +33,117 @@ def calc_total_dispatch(form):
     )
 
 
+def update_challan_status(db, challan_id):
+    if not challan_id:
+        return
+
+    remaining = db.execute("""
+        SELECT COUNT(*) AS cnt
+        FROM material_inward
+        WHERE challan_id=? AND available_qty > 0
+    """, (challan_id,)).fetchone()["cnt"]
+
+    status = "CLOSED" if remaining == 0 else "OPEN"
+    db.execute("UPDATE customer_challan SET status=? WHERE id=?", (status, challan_id))
+
+
+def load_dispatch_rows_by_elta(db, elta_challan_no):
+    return db.execute("""
+        SELECT
+            md.id,
+            COALESCE(md.source_type, 'INWARD') AS source_type,
+            CASE
+                WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN 'IN-HOUSE'
+                ELSE c.customer_name
+            END AS customer_name,
+            CASE
+                WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN COALESCE(ih.batch_no, 'In-house')
+                ELSE ch.customer_challan_no
+            END AS customer_challan_no,
+            CASE
+                WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN ih.stock_date
+                ELSE ch.customer_challan_date
+            END AS customer_challan_date,
+            md.elta_challan_no,
+            md.dispatch_date,
+            COALESCE(mi.item_code, ih.item_code) AS item_code,
+            COALESCE(mi.process, ih.process, '') AS process,
+            md.ok_qty, md.rej_qty, md.cd_qty, md.nd_qty, md.nd_pw_qty, md.total_qty
+        FROM material_dispatch md
+        LEFT JOIN material_inward mi ON mi.id = md.inward_id
+        LEFT JOIN customer_challan ch ON ch.id = md.challan_id
+        LEFT JOIN customer_master c ON c.id = ch.customer_id
+        LEFT JOIN material_inhouse_stock ih
+            ON COALESCE(md.source_type, 'INWARD') = 'INHOUSE'
+           AND ih.id = md.source_id
+        WHERE md.elta_challan_no=?
+        ORDER BY date(md.dispatch_date) DESC, md.id DESC
+    """, (elta_challan_no,)).fetchall()
+
+
+def db_table_exists(db, table_name):
+    row = db.execute("""
+        SELECT name
+        FROM sqlite_master
+        WHERE type='table' AND name=?
+    """, (table_name,)).fetchone()
+    return row is not None
+
+
+def db_has_column(db, table_name, column_name):
+    try:
+        cols = db.execute(f"PRAGMA table_info({table_name})").fetchall()
+    except Exception:
+        return False
+    return any((c["name"] if hasattr(c, "keys") else c[1]) == column_name for c in cols)
+
+
 def load_inventory_rows(db, customer_id="", item_code="", status="", from_date="", to_date=""):
     closed_mode = (status == "CLOSED")
+    source_dispatch_supported = (
+        closed_mode
+        and db_has_column(db, "material_dispatch", "source_type")
+        and db_has_column(db, "material_dispatch", "source_id")
+        and db_table_exists(db, "material_inhouse_stock")
+    )
 
-    if closed_mode:
+    if closed_mode and source_dispatch_supported:
+        query = """
+            SELECT
+                CASE
+                    WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN 'IN-HOUSE'
+                    ELSE c.customer_name
+                END AS customer_name,
+                CASE
+                    WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN COALESCE(ih.batch_no, 'In-house')
+                    ELSE ch.customer_challan_no
+                END AS customer_challan_no,
+                CASE
+                    WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN 'CLOSED'
+                    ELSE ch.status
+                END AS status,
+                md.dispatch_date,
+                md.elta_challan_no,
+                COALESCE(mi.item_code, ih.item_code) AS item_code,
+                COALESCE(mi.process, ih.process, '') AS process,
+                COALESCE(mi.inward_qty, ih.produced_qty, 0) AS inward_qty,
+                COALESCE(mi.available_qty, ih.available_qty, 0) AS available_qty,
+                md.ok_qty,
+                md.rej_qty,
+                md.cd_qty,
+                md.nd_qty,
+                md.nd_pw_qty,
+                md.total_qty
+            FROM material_dispatch md
+            LEFT JOIN material_inward mi ON mi.id = md.inward_id
+            LEFT JOIN customer_challan ch ON ch.id = md.challan_id
+            LEFT JOIN customer_master c ON c.id = ch.customer_id
+            LEFT JOIN material_inhouse_stock ih
+                ON COALESCE(md.source_type, 'INWARD') = 'INHOUSE'
+               AND ih.id = md.source_id
+            WHERE 1=1
+        """
+    elif closed_mode:
         query = """
             SELECT
                 c.customer_name,
@@ -91,11 +198,22 @@ def load_inventory_rows(db, customer_id="", item_code="", status="", from_date="
         params.append(customer_id)
 
     if item_code:
-        query += " AND mi.item_code=?"
+        if source_dispatch_supported:
+            query += " AND COALESCE(mi.item_code, ih.item_code)=?"
+        else:
+            query += " AND mi.item_code=?"
         params.append(item_code)
 
     if status:
-        query += " AND ch.status=?"
+        if source_dispatch_supported:
+            query += """
+                AND (CASE
+                    WHEN COALESCE(md.source_type, 'INWARD') = 'INHOUSE' THEN 'CLOSED'
+                    ELSE ch.status
+                END)=?
+            """
+        else:
+            query += " AND ch.status=?"
         params.append(status)
 
         if closed_mode and from_date and to_date:
@@ -202,36 +320,72 @@ def inward_entry():
     return render_template("material_inward.html", customers=customers, item_codes=item_codes_master, today=date.today())
 
 
+# ================= IN-HOUSE STOCK =================
+
+@materials_bp.route("/inhouse-stock", methods=["GET", "POST"])
+def inhouse_stock():
+    db = get_db()
+
+    item_codes = db.execute("""
+        SELECT item_code
+        FROM item_code_master
+        ORDER BY item_code
+    """).fetchall()
+
+    if request.method == "POST":
+        item_code = (request.form.get("item_code") or "").strip()
+        process = (request.form.get("process") or "").strip()
+        stock_date = request.form.get("stock_date") or ""
+        batch_no = (request.form.get("batch_no") or "").strip()
+        remarks = (request.form.get("remarks") or "").strip()
+        qty = int(request.form.get("produced_qty") or 0)
+
+        if not item_code:
+            abort(400, "Item code required")
+        if not stock_date:
+            abort(400, "Stock date required")
+        if qty <= 0:
+            abort(400, "Produced quantity must be > 0")
+
+        db.execute("""
+            INSERT INTO material_inhouse_stock
+            (item_code, process, stock_date, batch_no, produced_qty, available_qty, remarks)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (item_code, process, stock_date, batch_no, qty, qty, remarks))
+        db.commit()
+        return redirect("/materials/inhouse-stock")
+
+    rows = db.execute("""
+        SELECT *
+        FROM material_inhouse_stock
+        ORDER BY date(stock_date) DESC, id DESC
+    """).fetchall()
+
+    return render_template(
+        "material_inhouse_stock.html",
+        rows=rows,
+        item_codes=item_codes,
+        today=date.today(),
+    )
+
+
 # ================= DISPATCH =================
 
 @materials_bp.route("/dispatch", methods=["GET", "POST"])
 def dispatch_material():
-    """
-    Dispatch page supports:
-      - JOBWORK: user selects Customer Challan -> then selects one inward line (item/process/balance) from that challan
-      - PRODUCT: user selects one inward line (item/process/balance) directly from available stock
-
-    POST always submits:
-      - work_type (JOBWORK/PRODUCT)
-      - inward_id (required)
-      - elta_challan_no, dispatch_date
-      - qty fields (ok_qty, rej_qty, cd_qty, nd_qty, nd_pw_qty)
-
-    We also store work_type in session for convenience (optional).
-    """
     db = get_db()
 
     if request.method == "POST":
         work_type = (request.form.get("work_type") or "").strip().upper()
-        inward_id = request.form.get("inward_id")
+        source_id = request.form.get("source_id") or request.form.get("inward_id")
 
         elta_challan = (request.form.get("elta_challan_no") or "").strip()
         dispatch_date = request.form.get("dispatch_date") or ""
 
-        if work_type not in ("JOBWORK", "PRODUCT"):
+        if work_type not in ("JOBWORK", "PRODUCT", "INHOUSE"):
             abort(400, "Invalid work type")
 
-        if not inward_id:
+        if not source_id:
             abort(400, "Select an item to dispatch")
 
         if not elta_challan:
@@ -241,61 +395,88 @@ def dispatch_material():
         if total <= 0:
             abort(400, "Dispatch total must be > 0")
 
-        inward = db.execute("""
-            SELECT id, challan_id, available_qty
-            FROM material_inward
-            WHERE id=?
-        """, (inward_id,)).fetchone()
+        if work_type == "INHOUSE":
+            stock = db.execute("""
+                SELECT id, available_qty
+                FROM material_inhouse_stock
+                WHERE id=?
+            """, (source_id,)).fetchone()
 
-        if not inward:
-            abort(404, "Selected inward line not found")
+            if not stock:
+                abort(404, "Selected in-house stock line not found")
 
-        if total > int(inward["available_qty"] or 0):
-            abort(400, "Invalid dispatch quantity (exceeds available)")
+            if total > int(stock["available_qty"] or 0):
+                abort(400, "Invalid dispatch quantity (exceeds in-house stock)")
 
-        # Insert dispatch
-        db.execute("""
-            INSERT INTO material_dispatch
-            (challan_id, inward_id, elta_challan_no, dispatch_date,
-             ok_qty, rej_qty, cd_qty, nd_qty, nd_pw_qty, total_qty)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            inward["challan_id"],
-            inward["id"],
-            elta_challan,
-            dispatch_date,
-            int(request.form.get("ok_qty", 0) or 0),
-            int(request.form.get("rej_qty", 0) or 0),
-            int(request.form.get("cd_qty", 0) or 0),
-            int(request.form.get("nd_qty", 0) or 0),
-            int(request.form.get("nd_pw_qty", 0) or 0),
-            total
-        ))
+            db.execute("""
+                INSERT INTO material_dispatch
+                (challan_id, inward_id, source_type, source_id, elta_challan_no, dispatch_date,
+                 ok_qty, rej_qty, cd_qty, nd_qty, nd_pw_qty, total_qty)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                None,
+                None,
+                "INHOUSE",
+                stock["id"],
+                elta_challan,
+                dispatch_date,
+                int(request.form.get("ok_qty", 0) or 0),
+                int(request.form.get("rej_qty", 0) or 0),
+                int(request.form.get("cd_qty", 0) or 0),
+                int(request.form.get("nd_qty", 0) or 0),
+                int(request.form.get("nd_pw_qty", 0) or 0),
+                total,
+            ))
 
-        # Reduce available
-        db.execute("""
-            UPDATE material_inward
-            SET available_qty = available_qty - ?
-            WHERE id=?
-        """, (total, inward["id"]))
-
-        # Auto open/close challan based on remaining available lines in that challan
-        remaining = db.execute("""
-            SELECT COUNT(*) AS cnt
-            FROM material_inward
-            WHERE challan_id=? AND available_qty > 0
-        """, (inward["challan_id"],)).fetchone()["cnt"]
-
-        if remaining == 0:
-            db.execute("UPDATE customer_challan SET status='CLOSED' WHERE id=?", (inward["challan_id"],))
+            db.execute("""
+                UPDATE material_inhouse_stock
+                SET available_qty = available_qty - ?
+                WHERE id=?
+            """, (total, stock["id"]))
         else:
-            db.execute("UPDATE customer_challan SET status='OPEN' WHERE id=?", (inward["challan_id"],))
+            inward = db.execute("""
+                SELECT id, challan_id, available_qty
+                FROM material_inward
+                WHERE id=?
+            """, (source_id,)).fetchone()
+
+            if not inward:
+                abort(404, "Selected inward line not found")
+
+            if total > int(inward["available_qty"] or 0):
+                abort(400, "Invalid dispatch quantity (exceeds available)")
+
+            db.execute("""
+                INSERT INTO material_dispatch
+                (challan_id, inward_id, source_type, source_id, elta_challan_no, dispatch_date,
+                 ok_qty, rej_qty, cd_qty, nd_qty, nd_pw_qty, total_qty)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                inward["challan_id"],
+                inward["id"],
+                "INWARD",
+                inward["id"],
+                elta_challan,
+                dispatch_date,
+                int(request.form.get("ok_qty", 0) or 0),
+                int(request.form.get("rej_qty", 0) or 0),
+                int(request.form.get("cd_qty", 0) or 0),
+                int(request.form.get("nd_qty", 0) or 0),
+                int(request.form.get("nd_pw_qty", 0) or 0),
+                total,
+            ))
+
+            db.execute("""
+                UPDATE material_inward
+                SET available_qty = available_qty - ?
+                WHERE id=?
+            """, (total, inward["id"]))
+
+            update_challan_status(db, inward["challan_id"])
 
         db.commit()
         return redirect("/materials/inventory")
 
-    # ---------------- GET ----------------
-    # For JOBWORK UI: challans that still have any inward balance
     challans = db.execute("""
         SELECT
             ch.id AS challan_id,
@@ -313,7 +494,6 @@ def dispatch_material():
         ORDER BY ch.customer_challan_date DESC, ch.customer_challan_no DESC
     """).fetchall()
 
-    # For PRODUCT UI (optional master dropdown)
     item_codes = db.execute("""
         SELECT item_code
         FROM item_code_master
@@ -327,12 +507,13 @@ def dispatch_material():
         today=date.today()
     )
 
+
 @materials_bp.get("/dispatch/items/<int:challan_id>")
 def dispatch_items_for_challan(challan_id):
     db = get_db()
     rows = db.execute("""
         SELECT
-            mi.id AS inward_id,
+            mi.id AS source_id,
             mi.item_code,
             mi.process,
             mi.available_qty
@@ -344,10 +525,69 @@ def dispatch_items_for_challan(challan_id):
 
     return jsonify([
         {
-            "inward_id": r["inward_id"],
+            "source_id": r["source_id"],
             "item_code": r["item_code"],
             "process": r["process"] or "",
             "available_qty": int(r["available_qty"] or 0),
+            "source_label": "Customer Inward",
+        }
+        for r in rows
+    ])
+
+
+@materials_bp.get("/dispatch/product-items")
+def dispatch_product_items():
+    db = get_db()
+
+    rows = db.execute("""
+        SELECT
+            mi.id AS source_id,
+            mi.item_code,
+            mi.process,
+            mi.available_qty
+        FROM material_inward mi
+        WHERE mi.available_qty > 0
+        ORDER BY mi.item_code
+    """).fetchall()
+
+    return jsonify([
+        {
+            "source_id": r["source_id"],
+            "item_code": r["item_code"],
+            "process": r["process"] or "",
+            "available_qty": int(r["available_qty"] or 0),
+            "source_label": "Customer Inward",
+        }
+        for r in rows
+    ])
+
+
+@materials_bp.get("/dispatch/inhouse-items")
+def dispatch_inhouse_items():
+    db = get_db()
+
+    rows = db.execute("""
+        SELECT
+            id AS source_id,
+            item_code,
+            process,
+            batch_no,
+            stock_date,
+            available_qty
+        FROM material_inhouse_stock
+        WHERE available_qty > 0
+        ORDER BY item_code, date(stock_date) DESC, id DESC
+    """).fetchall()
+
+    return jsonify([
+        {
+            "source_id": r["source_id"],
+            "item_code": r["item_code"],
+            "process": r["process"] or "",
+            "available_qty": int(r["available_qty"] or 0),
+            "batch_no": r["batch_no"] or "",
+            "stock_date": r["stock_date"] or "",
+            "source_label": "In-house Stock",
         }
         for r in rows
     ])
@@ -621,26 +861,9 @@ def manage_dispatch_load():
     if not elta:
         abort(400, "ELTA challan required")
 
-    rows = db.execute("""
-        SELECT
-            md.id,
-            c.customer_name,
-            ch.customer_challan_no,
-            ch.customer_challan_date,
-            md.elta_challan_no,
-            md.dispatch_date,
-            mi.item_code,
-            mi.process,
-            md.ok_qty, md.rej_qty, md.cd_qty, md.nd_qty, md.nd_pw_qty, md.total_qty
-        FROM material_dispatch md
-        JOIN material_inward mi ON mi.id = md.inward_id
-        JOIN customer_challan ch ON ch.id = md.challan_id
-        JOIN customer_master c ON c.id = ch.customer_id
-        WHERE md.elta_challan_no=?
-        ORDER BY date(md.dispatch_date) DESC, md.id DESC
-    """, (elta,)).fetchall()
+    rows = load_dispatch_rows_by_elta(db, elta)
 
-    return render_template("material_manage_dispatch_table.html", rows=rows)
+    return render_template("material_manage_dispatch_table.html", rows=rows, pin1=pin1, pin2=pin2)
 
 
 @materials_bp.route("/manage/inward/edit/<int:inward_id>", methods=["POST"])
@@ -726,26 +949,37 @@ def manage_dispatch_edit(dispatch_id):
         abort(400, "Total dispatch must be > 0")
 
     old = db.execute("""
-        SELECT id, challan_id, inward_id, total_qty
+        SELECT id, challan_id, inward_id, source_type, source_id, total_qty
         FROM material_dispatch
         WHERE id=?
     """, (dispatch_id,)).fetchone()
     if not old:
         abort(404)
 
-    inward = db.execute("""
-        SELECT id, available_qty
-        FROM material_inward
-        WHERE id=?
-    """, (old["inward_id"],)).fetchone()
-    if not inward:
-        abort(400, "Linked inward row missing")
-
+    source_type = (old["source_type"] or "INWARD").upper()
     old_total = int(old["total_qty"] or 0)
     delta = new_total - old_total
 
-    if delta > 0 and inward["available_qty"] < delta:
-        abort(400, f"Not enough stock to increase dispatch. Need {delta}, available {inward['available_qty']}")
+    if source_type == "INHOUSE":
+        stock = db.execute("""
+            SELECT id, available_qty
+            FROM material_inhouse_stock
+            WHERE id=?
+        """, (old["source_id"],)).fetchone()
+        if not stock:
+            abort(400, "Linked in-house stock row missing")
+        if delta > 0 and int(stock["available_qty"] or 0) < delta:
+            abort(400, f"Not enough in-house stock to increase dispatch. Need {delta}, available {stock['available_qty']}")
+    else:
+        inward = db.execute("""
+            SELECT id, available_qty
+            FROM material_inward
+            WHERE id=?
+        """, (old["inward_id"],)).fetchone()
+        if not inward:
+            abort(400, "Linked inward row missing")
+        if delta > 0 and int(inward["available_qty"] or 0) < delta:
+            abort(400, f"Not enough stock to increase dispatch. Need {delta}, available {inward['available_qty']}")
 
     db.execute("""
         UPDATE material_dispatch
@@ -760,45 +994,24 @@ def manage_dispatch_edit(dispatch_id):
         dispatch_id
     ))
 
-    db.execute("""
-        UPDATE material_inward
-        SET available_qty = available_qty - ?
-        WHERE id=?
-    """, (delta, old["inward_id"]))
-
-    remaining = db.execute("""
-        SELECT COUNT(*) AS cnt
-        FROM material_inward
-        WHERE challan_id=? AND available_qty > 0
-    """, (old["challan_id"],)).fetchone()["cnt"]
-
-    if remaining == 0:
-        db.execute("UPDATE customer_challan SET status='CLOSED' WHERE id=?", (old["challan_id"],))
+    if source_type == "INHOUSE":
+        db.execute("""
+            UPDATE material_inhouse_stock
+            SET available_qty = available_qty - ?
+            WHERE id=?
+        """, (delta, old["source_id"]))
     else:
-        db.execute("UPDATE customer_challan SET status='OPEN' WHERE id=?", (old["challan_id"],))
+        db.execute("""
+            UPDATE material_inward
+            SET available_qty = available_qty - ?
+            WHERE id=?
+        """, (delta, old["inward_id"]))
+        update_challan_status(db, old["challan_id"])
 
     db.commit()
 
-    rows = db.execute("""
-        SELECT
-            md.id,
-            c.customer_name,
-            ch.customer_challan_no,
-            ch.customer_challan_date,
-            md.elta_challan_no,
-            md.dispatch_date,
-            mi.item_code,
-            mi.process,
-            md.ok_qty, md.rej_qty, md.cd_qty, md.nd_qty, md.nd_pw_qty, md.total_qty
-        FROM material_dispatch md
-        JOIN material_inward mi ON mi.id = md.inward_id
-        JOIN customer_challan ch ON ch.id = md.challan_id
-        JOIN customer_master c ON c.id = ch.customer_id
-        WHERE md.elta_challan_no=?
-        ORDER BY date(md.dispatch_date) DESC, md.id DESC
-    """, (elta_challan_no,)).fetchall()
-
-    return render_template("material_manage_dispatch_table.html", rows=rows)
+    rows = load_dispatch_rows_by_elta(db, elta_challan_no)
+    return render_template("material_manage_dispatch_table.html", rows=rows, pin1=pin1, pin2=pin2)
 
 
 # ================= DISPATCH DELETE (ROLLBACK STOCK) =================
@@ -813,7 +1026,7 @@ def manage_dispatch_delete(dispatch_id):
         abort(403, "Invalid PINs")
 
     d = db.execute("""
-        SELECT id, challan_id, inward_id, total_qty, elta_challan_no
+        SELECT id, challan_id, inward_id, source_type, source_id, total_qty, elta_challan_no
         FROM material_dispatch
         WHERE id=?
     """, (dispatch_id,)).fetchone()
@@ -821,71 +1034,27 @@ def manage_dispatch_delete(dispatch_id):
         abort(404)
 
     rollback_qty = int(d["total_qty"] or 0)
+    source_type = (d["source_type"] or "INWARD").upper()
 
-    db.execute("""
-        UPDATE material_inward
-        SET available_qty = available_qty + ?
-        WHERE id=?
-    """, (rollback_qty, d["inward_id"]))
+    if source_type == "INHOUSE":
+        db.execute("""
+            UPDATE material_inhouse_stock
+            SET available_qty = available_qty + ?
+            WHERE id=?
+        """, (rollback_qty, d["source_id"]))
+    else:
+        db.execute("""
+            UPDATE material_inward
+            SET available_qty = available_qty + ?
+            WHERE id=?
+        """, (rollback_qty, d["inward_id"]))
 
     db.execute("DELETE FROM material_dispatch WHERE id=?", (dispatch_id,))
 
-    remaining = db.execute("""
-        SELECT COUNT(*) AS cnt
-        FROM material_inward
-        WHERE challan_id=? AND available_qty > 0
-    """, (d["challan_id"],)).fetchone()["cnt"]
-
-    if remaining == 0:
-        db.execute("UPDATE customer_challan SET status='CLOSED' WHERE id=?", (d["challan_id"],))
-    else:
-        db.execute("UPDATE customer_challan SET status='OPEN' WHERE id=?", (d["challan_id"],))
+    if source_type != "INHOUSE":
+        update_challan_status(db, d["challan_id"])
 
     db.commit()
 
-    rows = db.execute("""
-        SELECT
-            md.id,
-            c.customer_name,
-            ch.customer_challan_no,
-            ch.customer_challan_date,
-            md.elta_challan_no,
-            md.dispatch_date,
-            mi.item_code,
-            mi.process,
-            md.ok_qty, md.rej_qty, md.cd_qty, md.nd_qty, md.nd_pw_qty, md.total_qty
-        FROM material_dispatch md
-        JOIN material_inward mi ON mi.id = md.inward_id
-        JOIN customer_challan ch ON ch.id = md.challan_id
-        JOIN customer_master c ON c.id = ch.customer_id
-        WHERE md.elta_challan_no=?
-        ORDER BY date(md.dispatch_date) DESC, md.id DESC
-    """, (d["elta_challan_no"],)).fetchall()
-
-    return render_template("material_manage_dispatch_table.html", rows=rows)
-
- 
-@materials_bp.get("/dispatch/product-items")
-def dispatch_product_items():
-    db = get_db()
-
-    rows = db.execute("""
-        SELECT
-            mi.id AS inward_id,
-            mi.item_code,
-            mi.process,
-            mi.available_qty
-        FROM material_inward mi
-        WHERE mi.available_qty > 0
-        ORDER BY mi.item_code
-    """).fetchall()
-
-    return jsonify([
-        {
-            "inward_id": r["inward_id"],
-            "item_code": r["item_code"],
-            "process": r["process"] or "",
-            "available_qty": int(r["available_qty"] or 0),
-        }
-        for r in rows
-    ])
+    rows = load_dispatch_rows_by_elta(db, d["elta_challan_no"])
+    return render_template("material_manage_dispatch_table.html", rows=rows, pin1=pin1, pin2=pin2)

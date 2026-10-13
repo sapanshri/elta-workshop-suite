@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Client Login | ELTA Engineering</title>
+    <link rel="icon" href="/static/img/elta-logo.png" type="image/png">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0e1726;
+            --muted: #58687a;
+            --steel: #15324d;
+            --blue: #2f6d9d;
+            --line: #d8e2ea;
+            --paper: #f2f6f9;
+            --white: #ffffff;
+            --danger: #8f1f1f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            font-family: "Barlow", sans-serif;
+            background: linear-gradient(180deg, #edf3f7 0%, #ffffff 58%, #edf3f7 100%);
+            color: var(--ink);
+        }
+        .login-shell {
+            width: min(100%, 460px);
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(15, 39, 61, 0.12);
+            padding: 32px;
+        }
+        .brand {
+            margin-bottom: 24px;
+        }
+        .brand-logo {
+            display: block;
+            width: auto;
+            height: 76px;
+            object-fit: contain;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 32px;
+            line-height: 1.05;
+        }
+        p {
+            margin: 0 0 22px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #cfd8e2;
+            border-radius: 10px;
+            background: var(--white);
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 800;
+        }
+        .google-mark {
+            width: 22px;
+            height: 22px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid #d8e2ea;
+            color: #4285f4;
+            font-weight: 800;
+        }
+        .alert {
+            margin: 0 0 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fff5f5;
+            color: var(--danger);
+            border: 1px solid #efc6c6;
+            font-weight: 700;
+        }
+        .setup-note {
+            margin-top: 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: var(--paper);
+            color: var(--muted);
+            border: 1px solid var(--line);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .home-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: var(--steel);
+            text-decoration: none;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <main class="login-shell">
+        <div class="brand"><img src="/static/img/elta-logo.png" alt="ELTA Engineering Services Pvt. Ltd." class="brand-logo"></div>
+        <h1>Client Dashboard Login</h1>
+        <p>Sign in with an approved Google account to access dashboard reports.</p>
+
+        {% if error %}
+        <div class="alert">{{ error }}</div>
+        {% endif %}
+
+        {% if config_ready %}
+        <a class="google-btn" href="/client-auth/google/start?next={{ next_url|urlencode }}">
+            <span class="google-mark">G</span>
+            Continue with Google
+        </a>
+        {% else %}
+        <div class="alert">Google login is not configured yet.</div>
+        <div class="setup-note">
+            Add Google OAuth credentials and allowed users in:<br>
+            {{ config_path }}
+        </div>
+        {% endif %}
+
+        <a class="home-link" href="/">Back to homepage</a>
+    </main>
+</body>
+</html>

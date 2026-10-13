@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "google_client_id": "",
+  "google_client_secret": "",
+  "redirect_uri": "https://www.eltaengineering.com/client-auth/google/callback",
+  "allowed_emails": [
+    "sapanshri@gmail.com"
+  ]
+}

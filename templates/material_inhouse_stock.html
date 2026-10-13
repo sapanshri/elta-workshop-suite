@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>In-house Stock - ELTA Workshop Suite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page-wide">
+<div class="card-wide form-card">
+
+<h1>In-house Production Stock</h1>
+
+<div class="nav-bar">
+  <a href="/" class="nav-btn nav-home">Home</a>
+  <a href="/materials/dispatch" class="nav-btn nav-secondary">Material Dispatch</a>
+  <a href="/materials/inventory" class="nav-btn nav-secondary">Inventory</a>
+</div>
+
+<form method="post" class="stacked-form" style="margin-bottom:18px;">
+  <h3>Add In-house Manufactured Stock</h3>
+
+  <label>Item Code</label>
+  <select name="item_code" required>
+    <option value="">Select item...</option>
+    {% for it in item_codes %}
+      <option value="{{ it.item_code }}">{{ it.item_code }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Process</label>
+  <input name="process" placeholder="Process / operation">
+
+  <label>Stock Date</label>
+  <input type="date" name="stock_date" value="{{ today }}" required>
+
+  <label>Batch / Job No.</label>
+  <input name="batch_no" placeholder="Optional batch or job reference">
+
+  <label>Produced Qty</label>
+  <input type="number" name="produced_qty" min="1" value="1" required>
+
+  <label>Remarks</label>
+  <input name="remarks" placeholder="Optional remarks">
+
+  <button class="nav-btn nav-primary full-width">Add In-house Stock</button>
+</form>
+
+<hr>
+
+<h3>In-house Stock Ledger</h3>
+<table class="inventory-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Date</th>
+      <th>Item Code</th>
+      <th>Process</th>
+      <th>Batch / Job</th>
+      <th>Produced</th>
+      <th>Available</th>
+      <th>Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r.stock_date }}</td>
+      <td>{{ r.item_code }}</td>
+      <td>{{ r.process }}</td>
+      <td>{{ r.batch_no }}</td>
+      <td class="num">{{ r.produced_qty }}</td>
+      <td class="num"><b>{{ r.available_qty }}</b></td>
+      <td>{{ r.remarks }}</td>
+    </tr>
+    {% endfor %}
+    {% if not rows %}
+    <tr><td colspan="8" style="color:#777; text-align:center;">No in-house stock entered yet.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+</div>
+</div>
+
+</body>
+</html>

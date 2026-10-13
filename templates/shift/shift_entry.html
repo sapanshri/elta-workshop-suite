@@ -1,30 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Shift Production Entry</title>
+    <title>{{ "Edit Shift Production Entry" if mode == "edit" else "Shift Production Entry" }}</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .table-actions {
+            margin: 10px 0 16px;
+        }
+
+        .row-action-cell {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .small-action {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+    </style>
 </head>
 <body>
 
 <div class="page-wide">
 <div class="card-wide form-card">
 
-<h1>Shift Production Entry</h1>
+<h1>{{ "Edit Shift Production Entry" if mode == "edit" else "Shift Production Entry" }}</h1>
 
 <form method="post" class="stacked-form">
 
 <label>Date</label>
-<input type="date" name="shift_date" value="{{ today }}" required>
+<input type="date" name="shift_date" value="{{ header.shift_date or today }}" required>
 
 <label>Shift</label>
 <select name="shift" required>
-    <option>A</option>
-    <option>B</option>
-  
+    <option value="A" {% if header.shift == "A" %}selected{% endif %}>A</option>
+    <option value="B" {% if header.shift == "B" %}selected{% endif %}>B</option>
 </select>
 
 <label>Shift Incharge</label>
-<input name="shift_incharge" required>
+<input name="shift_incharge" value="{{ header.shift_incharge or '' }}" required>
+
+<label>Remarks</label>
+<textarea name="remarks" rows="2">{{ header.remarks or '' }}</textarea>
 
 <hr>
 
@@ -40,10 +57,160 @@
     <th>Operator</th>
     <th>OK</th>
     <th>Reject</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody id="productionBody">
+{% for row in production_rows %}
+<tr>
+    <td>
+        <select name="machine_code[]">
+            <option value="">-- Select Machine --</option>
+            {% for m in machines %}
+            <option value="{{ m.machine_code }}" {% if row.machine == m.machine_code %}selected{% endif %}>
+                {{ m.machine_code }} | {{ m.machine_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select name="item_code[]">
+            <option value="">-- Select --</option>
+            {% for ic in item_codes %}
+            <option value="{{ ic.item_code }}" {% if row.item_code == ic.item_code %}selected{% endif %}>
+                {{ ic.item_code }}
+            </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td><input name="setup_no[]" value="{{ row.setup_no or '' }}" placeholder="Setup No."></td>
+    <td><input name="operator[]" value="{{ row.operator or '' }}"></td>
+    <td><input type="number" name="ok_qty[]" value="{{ row.ok_qty or 0 }}"></td>
+    <td><input type="number" name="rej_qty[]" value="{{ row.rej_qty or 0 }}"></td>
+    <td class="row-action-cell">
+        <button type="button" class="nav-btn nav-secondary small-action" data-remove-row>Remove</button>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<div class="table-actions">
+    <button type="button" id="addProductionRow" class="nav-btn nav-secondary">Add Production Row</button>
+</div>
+
+<hr>
+
+<h3>Setup Change</h3>
+
+<table class="inventory-table setup-table">
+<thead>
+<tr>
+    <th>Job &amp; Setup No.</th>
+    <th>Change Time</th>
+    <th>Machine No.</th>
+    <th>Production Start Time</th>
 </tr>
 </thead>
 <tbody>
-{% for i in range(6) %}
+
+{% for row in setup_rows %}
+<tr>
+    <td>
+        <input name="setup_job[]" value="{{ row.from_item or '' }}" placeholder="Job / Setup No.">
+    </td>
+    <td>
+        <input type="time" name="setup_change_time[]" value="{{ row.to_item or '' }}">
+    </td>
+    <td>
+        <input name="setup_machine[]" value="{{ row.machine or '' }}" placeholder="Machine No.">
+    </td>
+    <td>
+        <input type="time" name="setup_start_time[]" value="{{ row.remarks or '' }}">
+    </td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+<hr>
+
+<h3>Attendance</h3>
+<table class="inventory-table shift-table">
+
+<thead>
+<tr>
+    <th>Operator</th>
+    <th>Status</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody id="attendanceBody">
+{% for row in attendance_rows %}
+<tr>
+    <td><input name="att_operator[]" value="{{ row.operator or '' }}"></td>
+    <td>
+        <select name="att_status[]">
+            <option value="Present" {% if row.status == "Present" or not row.status %}selected{% endif %}>Present</option>
+            <option value="Absent" {% if row.status == "Absent" %}selected{% endif %}>Absent</option>
+            <option value="Half" {% if row.status == "Half" %}selected{% endif %}>Half</option>
+        </select>
+    </td>
+    <td class="row-action-cell">
+        <button type="button" class="nav-btn nav-secondary small-action" data-remove-row>Remove</button>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<div class="table-actions">
+    <button type="button" id="addAttendanceRow" class="nav-btn nav-secondary">Add Attendance Row</button>
+</div>
+
+<hr>
+
+<h3>Downtime</h3>
+<table class="inventory-table shift-table">
+
+<thead>
+<tr>
+    <th>Machine</th>
+    <th>Reason</th>
+    <th>Minutes</th>
+</tr>
+</thead>
+<tbody>
+{% for row in downtime_rows %}
+<tr>
+    <td>
+        <select name="down_machine_code[]">
+            <option value="">-- Select Machine --</option>
+            {% for m in machines %}
+            <option value="{{ m.machine_code }}" {% if row.machine == m.machine_code %}selected{% endif %}>
+                {{ m.machine_code }} | {{ m.machine_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td><input name="dt_reason[]" value="{{ row.reason or '' }}"></td>
+    <td><input type="number" name="dt_minutes[]" value="{{ row.minutes or 0 }}"></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<button class="nav-btn nav-primary full-width">
+    {{ "Update Shift Report" if mode == "edit" else "Save Shift Report" }}
+</button>
+
+</form>
+
+</div>
+</div>
+
+<template id="productionRowTemplate">
 <tr>
     <td>
         <select name="machine_code[]">
@@ -65,111 +232,79 @@
     <td><input name="operator[]"></td>
     <td><input type="number" name="ok_qty[]" value="0"></td>
     <td><input type="number" name="rej_qty[]" value="0"></td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-
-<hr>
-
-<h3>Setup Change</h3>
-
-<table class="inventory-table setup-table">
-<thead>
-<tr>
-    <th>Job &amp; Setup No.</th>
-    <th>Change Time</th>
-    <th>Machine No.</th>
-    <th>Production Start Time</th>
-</tr>
-</thead>
-<tbody>
-
-{% for i in range(3) %}
-<tr>
-    <td>
-        <input name="setup_job[]" placeholder="Job / Setup No.">
-    </td>
-    <td>
-        <input type="time" name="setup_change_time[]">
-    </td>
-    <td>
-        <input name="setup_machine[]" placeholder="Machine No.">
-    </td>
-    <td>
-        <input type="time" name="setup_start_time[]">
+    <td class="row-action-cell">
+        <button type="button" class="nav-btn nav-secondary small-action" data-remove-row>Remove</button>
     </td>
 </tr>
-{% endfor %}
+</template>
 
-</tbody>
-</table>
-
-<hr>
-
-<h3>Attendance</h3>
-<table class="inventory-table shift-table">
-
-<thead>
-<tr>
-    <th>Operator</th>
-    <th>Status</th>
-</tr>
-</thead>
-<tbody>
-{% for i in range(5) %}
+<template id="attendanceRowTemplate">
 <tr>
     <td><input name="att_operator[]"></td>
     <td>
         <select name="att_status[]">
-            <option>Present</option>
-            <option>Absent</option>
-            <option>Half</option>
+            <option value="Present" selected>Present</option>
+            <option value="Absent">Absent</option>
+            <option value="Half">Half</option>
         </select>
     </td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-
-<hr>
-
-<h3>Downtime</h3>
-<table class="inventory-table shift-table">
-
-<thead>
-<tr>
-    <th>Machine</th>
-    <th>Reason</th>
-    <th>Minutes</th>
-</tr>
-</thead>
-<tbody>
-{% for i in range(3) %}
-<tr>
-    <td>
-        <select name="machine_code[]">
-            <option value="">-- Select Machine --</option>
-            {% for m in machines %}
-            <option value="{{ m.machine_code }}">{{ m.machine_code }} | {{ m.machine_name }}</option>
-            {% endfor %}
-        </select>
+    <td class="row-action-cell">
+        <button type="button" class="nav-btn nav-secondary small-action" data-remove-row>Remove</button>
     </td>
-    <td><input name="dt_reason[]"></td>
-    <td><input type="number" name="dt_minutes[]" value="0"></td>
 </tr>
-{% endfor %}
-</tbody>
-</table>
+</template>
 
-<button class="nav-btn nav-primary full-width">
-    Save Shift Report
-</button>
+<script>
+(function () {
+    function clearRow(row) {
+        row.querySelectorAll("input, select, textarea").forEach(function (field) {
+            if (field.tagName === "SELECT") {
+                field.selectedIndex = 0;
+            } else if (field.type === "number") {
+                field.value = "0";
+            } else {
+                field.value = "";
+            }
+        });
+    }
 
-</form>
+    function bindRemove(row) {
+        var button = row.querySelector("[data-remove-row]");
+        if (!button) {
+            return;
+        }
 
-</div>
-</div>
+        button.addEventListener("click", function () {
+            var body = row.closest("tbody");
+            if (body && body.rows.length > 1) {
+                row.remove();
+            } else {
+                clearRow(row);
+            }
+        });
+    }
+
+    function wireAddButton(buttonId, bodyId, templateId) {
+        var button = document.getElementById(buttonId);
+        var body = document.getElementById(bodyId);
+        var template = document.getElementById(templateId);
+
+        if (!button || !body || !template) {
+            return;
+        }
+
+        button.addEventListener("click", function () {
+            var row = template.content.firstElementChild.cloneNode(true);
+            bindRemove(row);
+            body.appendChild(row);
+        });
+    }
+
+    document.querySelectorAll("tbody tr").forEach(bindRemove);
+    wireAddButton("addProductionRow", "productionBody", "productionRowTemplate");
+    wireAddButton("addAttendanceRow", "attendanceBody", "attendanceRowTemplate");
+})();
+</script>
 
 </body>
 </html>

@@ -12,6 +12,7 @@
 <div class="nav-bar">
   <a href="/materials/inward" class="nav-btn nav-secondary">Inward Entry</a>
   <a href="/materials/dispatch" class="nav-btn nav-secondary">Material Dispatch</a>
+  <a href="/materials/inhouse-stock" class="nav-btn nav-secondary">In-house Stock</a>
   <a href="/materials/inventory" class="nav-btn nav-secondary">Inventory Display</a>
   <a href="/materials/manage" class="nav-btn nav-primary">Modify/Delete</a>
   <a href="/" class="nav-btn nav-home">Home</a>
@@ -152,8 +153,9 @@
       <thead>
         <tr>
           <th>#</th>
+          <th>Source</th>
           <th>Customer</th>
-          <th>Cust Challan</th>
+          <th>Cust Challan / Batch</th>
           <th>Cust Date</th>
           <th>ELTA Challan</th>
           <th>Dispatch Date</th>
@@ -169,7 +171,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td colspan="15" style="color:#777;">Select ELTA challan and click Load.</td></tr>
+        <tr><td colspan="16" style="color:#777;">Select ELTA challan and click Load.</td></tr>
       </tbody>
     </table>
   </div>
@@ -245,6 +247,34 @@ async function saveDispatchRow(btn, dispatchId){
 
     document.getElementById("dispatchTableWrap").innerHTML = await res.text();
     toast("Saved ✅");
+  } finally {
+    btn.dataset.busy = "0";
+    btn.innerText = oldText;
+    btn.disabled = false;
+  }
+}
+
+async function deleteDispatchRow(btn, dispatchId){
+  if(!confirm("Delete this dispatch and restore stock?")) return;
+  if(btn.dataset.busy === "1") return;
+  btn.dataset.busy = "1";
+  const oldText = btn.innerText;
+  btn.innerText = "Deleting...";
+  btn.disabled = true;
+
+  try{
+    const pin1 = document.getElementById("pin1_keep").value;
+    const pin2 = document.getElementById("pin2_keep").value;
+
+    const fd = new FormData();
+    fd.append("pin1", pin1);
+    fd.append("pin2", pin2);
+
+    const res = await fetch(`/materials/manage/dispatch/delete/${dispatchId}`, { method:"POST", body: fd });
+    if(!res.ok){ alert(await res.text()); return; }
+
+    document.getElementById("dispatchTableWrap").innerHTML = await res.text();
+    toast("Deleted");
   } finally {
     btn.dataset.busy = "0";
     btn.innerText = oldText;

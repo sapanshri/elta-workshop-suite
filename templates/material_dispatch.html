@@ -9,11 +9,12 @@
 <div class="page-wide">
 <div class="card-wide form-card">
 
-<h1>Material Dispatch (Job Work / Product)</h1>
+<h1>Material Dispatch (Job Work / Product / In-house)</h1>
 
 <div class="nav-bar">
   <a href="/" class="nav-btn nav-home">🏠 Home</a>
   <a href="/materials/inventory" class="nav-btn nav-secondary">📦 Inventory</a>
+  <a href="/materials/inhouse-stock" class="nav-btn nav-secondary">🏭 In-house Stock</a>
 </div>
 
 <form method="post" class="stacked-form" id="dispatchMainForm">
@@ -24,6 +25,7 @@
     <option value="">Select...</option>
     <option value="JOBWORK">Job Work</option>
     <option value="PRODUCT">Product</option>
+    <option value="INHOUSE">In-house Manufactured</option>
   </select>
 
   <!-- JOBWORK: Customer Challan -->
@@ -39,7 +41,7 @@
     </select>
   </div>
 
-  <!-- PRODUCT: Item master select (optional for usability; items actually loaded from stock endpoint) -->
+  <!-- PRODUCT: Item master select (items loaded from customer/inward stock) -->
   <div id="productBlock" style="display:none;">
     <label>Item Code (Product)</label>
     <select id="productItemMaster">
@@ -49,13 +51,27 @@
       {% endfor %}
     </select>
     <div style="color:#777; font-size:12px; margin-top:6px;">
-      Only items with available stock will be selectable in the next dropdown.
+      Product dispatch uses available customer/inward stock.
     </div>
   </div>
 
-  <!-- Item selector (posts inward_id to server for BOTH jobwork & product) -->
+  <!-- INHOUSE: Item master select (items loaded from in-house finished stock) -->
+  <div id="inhouseBlock" style="display:none;">
+    <label>Item Code (In-house)</label>
+    <select id="inhouseItemMaster">
+      <option value="">Select item...</option>
+      {% for it in item_codes %}
+        <option value="{{ it.item_code }}">{{ it.item_code }}</option>
+      {% endfor %}
+    </select>
+    <div style="color:#777; font-size:12px; margin-top:6px;">
+      In-house manufactured items must first be entered in In-house Stock.
+    </div>
+  </div>
+
+  <!-- Item selector posts source_id to server for inward or in-house stock -->
   <label>Item Code</label>
-  <select name="inward_id" id="itemSelect" required disabled>
+  <select name="source_id" id="itemSelect" required disabled>
     <option value="">Select Work Type first...</option>
   </select>
 
@@ -114,8 +130,9 @@
 </div>
 
 <script>
-let itemMap = {}; // inward_id -> {item_code, process, available_qty}
+let itemMap = {}; // source_id -> {item_code, process, available_qty}
 let productStockRows = []; // cached from /dispatch/product-items
+let inhouseStockRows = []; // cached from /dispatch/inhouse-items
 
 function resetItemSelect(message){
   const itemSelect = document.getElementById("itemSelect");
@@ -146,6 +163,15 @@ async function loadProductStock(){
   productStockRows = await res.json();
 }
 
+async function loadInhouseStock(){
+  const res = await fetch(`/materials/dispatch/inhouse-items`);
+  if(!res.ok){
+    inhouseStockRows = [];
+    return;
+  }
+  inhouseStockRows = await res.json();
+}
+
 function fillItemSelectFromRows(rows){
   const itemSelect = document.getElementById("itemSelect");
   if(!rows || rows.length === 0){
@@ -156,22 +182,23 @@ function fillItemSelectFromRows(rows){
   let html = `<option value="">Select item...</option>`;
   itemMap = {};
   rows.forEach(r => {
-    const inwardId = String(r.inward_id);
-    itemMap[inwardId] = {
+    const sourceId = String(r.source_id);
+    const extra = r.batch_no ? ` | Batch: ${r.batch_no}` : "";
+    itemMap[sourceId] = {
       item_code: r.item_code,
       process: r.process || "",
       available_qty: r.available_qty || 0
     };
-    html += `<option value="${inwardId}">${r.item_code} | ${r.process || "-"} | Bal: ${r.available_qty}</option>`;
+    html += `<option value="${sourceId}">${r.item_code} | ${r.process || "-"}${extra} | Bal: ${r.available_qty}</option>`;
   });
 
   itemSelect.innerHTML = html;
   itemSelect.disabled = false;
 }
 
-function filterProductRowsByItemCode(itemCode){
-  if(!itemCode) return productStockRows;
-  return productStockRows.filter(r => String(r.item_code) === String(itemCode));
+function filterRowsByItemCode(rows, itemCode){
+  if(!itemCode) return rows;
+  return rows.filter(r => String(r.item_code) === String(itemCode));
 }
 
 /* UI Toggle */
@@ -180,26 +207,41 @@ document.getElementById("workType").addEventListener("change", async (e) => {
 
   const jobworkBlock = document.getElementById("jobworkBlock");
   const productBlock = document.getElementById("productBlock");
+  const inhouseBlock = document.getElementById("inhouseBlock");
 
   if(wt === "JOBWORK"){
     jobworkBlock.style.display = "block";
     productBlock.style.display = "none";
+    inhouseBlock.style.display = "none";
     resetItemSelect("Select challan first...");
     document.getElementById("challanSelect").value = "";
     document.getElementById("productItemMaster").value = "";
+    document.getElementById("inhouseItemMaster").value = "";
   }
   else if(wt === "PRODUCT"){
     jobworkBlock.style.display = "none";
     productBlock.style.display = "block";
-    resetItemSelect("Loading stock items...");
+    inhouseBlock.style.display = "none";
+    resetItemSelect("Loading inward stock items...");
     document.getElementById("challanSelect").value = "";
+    document.getElementById("inhouseItemMaster").value = "";
     await loadProductStock();
-    // show ALL stock items initially
     fillItemSelectFromRows(productStockRows);
+  }
+  else if(wt === "INHOUSE"){
+    jobworkBlock.style.display = "none";
+    productBlock.style.display = "none";
+    inhouseBlock.style.display = "block";
+    resetItemSelect("Loading in-house stock items...");
+    document.getElementById("challanSelect").value = "";
+    document.getElementById("productItemMaster").value = "";
+    await loadInhouseStock();
+    fillItemSelectFromRows(inhouseStockRows);
   }
   else {
     jobworkBlock.style.display = "none";
     productBlock.style.display = "none";
+    inhouseBlock.style.display = "none";
     resetItemSelect("Select Work Type first...");
   }
 });
@@ -220,7 +262,17 @@ document.getElementById("productItemMaster").addEventListener("change", async (e
   if(productStockRows.length === 0){
     await loadProductStock();
   }
-  const filtered = filterProductRowsByItemCode(itemCode);
+  const filtered = filterRowsByItemCode(productStockRows, itemCode);
+  fillItemSelectFromRows(filtered);
+});
+
+/* In-house master item code filter */
+document.getElementById("inhouseItemMaster").addEventListener("change", async (e) => {
+  const itemCode = e.target.value;
+  if(inhouseStockRows.length === 0){
+    await loadInhouseStock();
+  }
+  const filtered = filterRowsByItemCode(inhouseStockRows, itemCode);
   fillItemSelectFromRows(filtered);
 });
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, abort, send_file
+from flask import Blueprint, render_template, request, redirect, abort, send_file, session
 from db import get_db
 from datetime import date, timedelta
 from db import fetch_active_machines
@@ -8,9 +8,182 @@ import csv
 shift_bp = Blueprint("shift", __name__, url_prefix="/shift")
 
 
+def admin_required():
+    if session.get("role") != "Admin":
+        abort(403)
+
+
 def has_shift_production_setup_no(db):
     cols = db.execute("PRAGMA table_info(shift_production)").fetchall()
     return any((col["name"] if hasattr(col, "keys") else col[1]) == "setup_no" for col in cols)
+
+
+def row_to_dict(row):
+    if not row:
+        return {}
+    return {key: row[key] for key in row.keys()}
+
+
+def pad_rows(rows, minimum):
+    result = [row_to_dict(row) for row in rows]
+    while len(result) < minimum:
+        result.append({})
+    return result
+
+
+def int_or_zero(value):
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def load_shift_form_options(db):
+    return {
+        "machines": fetch_active_machines(db),
+        "item_codes": db.execute("""
+            SELECT item_code
+            FROM item_code_master
+            ORDER BY item_code
+        """).fetchall(),
+    }
+
+
+def shift_form_context(db, *, mode="add", header=None, production=None, setup=None, attendance=None, downtime=None):
+    options = load_shift_form_options(db)
+    header_values = row_to_dict(header)
+    if not header_values:
+        header_values = {
+            "shift_date": date.today().isoformat(),
+            "shift": "",
+            "shift_incharge": "",
+            "remarks": "",
+        }
+
+    return {
+        **options,
+        "mode": mode,
+        "today": date.today().isoformat(),
+        "header": header_values,
+        "production_rows": pad_rows(production or [], 6),
+        "setup_rows": pad_rows(setup or [], 3),
+        "attendance_rows": pad_rows(attendance or [], 5),
+        "downtime_rows": pad_rows(downtime or [], 3),
+    }
+
+
+def save_shift_children(db, shift_id, *, replace=False):
+    if replace:
+        for table in ("shift_production", "shift_setup", "shift_attendance", "shift_downtime"):
+            db.execute(f"DELETE FROM {table} WHERE shift_id=?", (shift_id,))
+
+    # ================= PRODUCTION =================
+    items = request.form.getlist("item_code[]")
+    setup_nos = request.form.getlist("setup_no[]")
+    machine_codes = request.form.getlist("machine_code[]")
+    operators = request.form.getlist("operator[]")
+    oks = request.form.getlist("ok_qty[]")
+    rejs = request.form.getlist("rej_qty[]")
+
+    n = min(len(items), len(setup_nos), len(machine_codes), len(operators), len(oks), len(rejs))
+
+    for i in range(n):
+        item = (items[i] or "").strip()
+        if not item:
+            continue
+
+        ok = int_or_zero(oks[i])
+        rej = int_or_zero(rejs[i])
+
+        if ok == 0 and rej == 0:
+            continue
+
+        db.execute("""
+            INSERT INTO shift_production
+            (shift_id, item_code, setup_no, machine, operator, ok_qty, rej_qty)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            shift_id,
+            item,
+            (setup_nos[i] or "").strip(),
+            (machine_codes[i] or "").strip(),
+            (operators[i] or "").strip(),
+            ok,
+            rej
+        ))
+
+    # ================= SETUP CHANGE =================
+    setup_job = request.form.getlist("setup_job[]")
+    setup_change_time = request.form.getlist("setup_change_time[]")
+    setup_machine = request.form.getlist("setup_machine[]")
+    setup_start_time = request.form.getlist("setup_start_time[]")
+
+    n = min(len(setup_job), len(setup_change_time), len(setup_machine), len(setup_start_time))
+
+    for i in range(n):
+        job = (setup_job[i] or "").strip()
+        change_time = (setup_change_time[i] or "").strip()
+        machine = (setup_machine[i] or "").strip()
+        start_time = (setup_start_time[i] or "").strip()
+
+        if not any((job, change_time, machine, start_time)):
+            continue
+
+        db.execute("""
+            INSERT INTO shift_setup
+            (shift_id, machine, from_item, to_item, remarks)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            shift_id,
+            machine,
+            job,
+            change_time,
+            start_time
+        ))
+
+    # ================= ATTENDANCE =================
+    att_operator = request.form.getlist("att_operator[]")
+    att_status = request.form.getlist("att_status[]")
+
+    n = min(len(att_operator), len(att_status))
+
+    for i in range(n):
+        operator = (att_operator[i] or "").strip()
+        if not operator:
+            continue
+
+        db.execute("""
+            INSERT INTO shift_attendance
+            (shift_id, operator, status)
+            VALUES (?, ?, ?)
+        """, (
+            shift_id,
+            operator,
+            (att_status[i] or "Present").strip()
+        ))
+
+    # ================= DOWNTIME =================
+    down_machine_code = request.form.getlist("down_machine_code[]")
+    dt_reason = request.form.getlist("dt_reason[]")
+    dt_minutes = request.form.getlist("dt_minutes[]")
+
+    n = min(len(down_machine_code), len(dt_reason), len(dt_minutes))
+
+    for i in range(n):
+        machine = (down_machine_code[i] or "").strip()
+        if not machine:
+            continue
+
+        db.execute("""
+            INSERT INTO shift_downtime
+            (shift_id, machine, reason, minutes)
+            VALUES (?, ?, ?, ?)
+        """, (
+            shift_id,
+            machine,
+            (dt_reason[i] or "").strip(),
+            int_or_zero(dt_minutes[i])
+        ))
 
 
 def resolve_machine_report_filters(args):
@@ -129,13 +302,6 @@ def shift_home():
 @shift_bp.route("/add", methods=["GET", "POST"])
 def shift_add():
     db = get_db()
-    machines = fetch_active_machines(db)
-
-    item_codes = db.execute("""
-        SELECT item_code
-        FROM item_code_master
-        ORDER BY item_code
-    """).fetchall()
 
     if request.method == "POST":
         shift_date = request.form["shift_date"]
@@ -165,109 +331,93 @@ def shift_add():
             "SELECT last_insert_rowid()"
         ).fetchone()[0]
 
-        # ================= PRODUCTION =================
-        items = request.form.getlist("item_code[]")
-        setup_nos = request.form.getlist("setup_no[]")
-        machine_codes = request.form.getlist("machine_code[]")
-        operators = request.form.getlist("operator[]")
-        oks = request.form.getlist("ok_qty[]")
-        rejs = request.form.getlist("rej_qty[]")
-
-        n = min(len(items), len(setup_nos), len(machine_codes), len(operators), len(oks), len(rejs))
-
-        for i in range(n):
-            item = (items[i] or "").strip()
-            if not item:
-                continue
-
-            ok = int(oks[i] or 0)
-            rej = int(rejs[i] or 0)
-
-            if ok == 0 and rej == 0:
-                continue
-
-            db.execute("""
-                INSERT INTO shift_production
-                (shift_id, item_code, setup_no, machine, operator, ok_qty, rej_qty)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                shift_id,
-                item,
-                (setup_nos[i] or "").strip(),
-                (machine_codes[i] or "").strip(),   # machine_code stored in 'machine'
-                (operators[i] or "").strip(),
-                ok,
-                rej
-            ))
-
-        # ================= SETUP CHANGE =================
-        setup_job = request.form.getlist("setup_job[]")
-        setup_change_time = request.form.getlist("setup_change_time[]")
-        setup_machine = request.form.getlist("setup_machine[]")
-        setup_start_time = request.form.getlist("setup_start_time[]")
-
-        for i in range(len(setup_job)):
-            if not setup_job[i]:
-                continue
-
-            db.execute("""
-                INSERT INTO shift_setup
-                (shift_id, machine, from_item, to_item, remarks)
-                VALUES (?, ?, ?, ?, ?)
-            """, (
-                shift_id,
-                setup_machine[i],
-                setup_job[i],              #- store Job & Setup No. here
-                setup_change_time[i],      #-- store Change Time
-                setup_start_time[i]        #-- store Production Start Time
-            ))
-
-        # ================= ATTENDANCE =================
-        att_operator = request.form.getlist("att_operator[]")
-        att_status = request.form.getlist("att_status[]")
-
-        for i in range(len(att_operator)):
-            if not att_operator[i]:
-                continue
-
-            db.execute("""
-                INSERT INTO shift_attendance
-                (shift_id, operator, status)
-                VALUES (?, ?, ?)
-            """, (
-                shift_id,
-                att_operator[i],
-                att_status[i]
-            ))
-
-        # ================= DOWNTIME =================
-        down_machine_code = request.form.getlist("down_machine_code[]")
-        dt_reason = request.form.getlist("dt_reason[]")
-        dt_minutes = request.form.getlist("dt_minutes[]")
-
-        for i in range(len(down_machine_code)):
-            if not down_machine_code[i]:
-                continue
-
-            db.execute("""
-                INSERT INTO shift_downtime
-                (shift_id, machine, reason, minutes)
-                VALUES (?, ?, ?, ?)
-            """, (
-                shift_id,
-                down_machine_code[i],
-                dt_reason[i],
-                int(dt_minutes[i] or 0)
-            ))
+        save_shift_children(db, shift_id)
 
         db.commit()
         return redirect("/shift/view")
 
     return render_template(
         "shift/shift_entry.html",
-        machines=machines,
-        today=date.today(),
-        item_codes=item_codes
+        **shift_form_context(db, mode="add")
+    )
+
+
+@shift_bp.route("/edit/<int:shift_id>", methods=["GET", "POST"])
+def shift_edit(shift_id):
+    admin_required()
+    db = get_db()
+
+    header = db.execute("""
+        SELECT * FROM shift_header
+        WHERE id=?
+    """, (shift_id,)).fetchone()
+
+    if not header:
+        abort(404)
+
+    if request.method == "POST":
+        shift_date = request.form["shift_date"]
+        shift = request.form["shift"]
+        incharge = request.form["shift_incharge"]
+        remarks = request.form.get("remarks", "")
+
+        if not shift_date or not shift or not incharge:
+            abort(400, "Missing header fields")
+
+        row = db.execute("""
+            SELECT id FROM shift_header
+            WHERE shift_date=? AND shift=? AND id<>?
+        """, (shift_date, shift, shift_id)).fetchone()
+
+        if row:
+            abort(400, "Shift already exists")
+
+        db.execute("""
+            UPDATE shift_header
+            SET shift_date=?, shift=?, shift_incharge=?, remarks=?
+            WHERE id=?
+        """, (shift_date, shift, incharge, remarks, shift_id))
+
+        save_shift_children(db, shift_id, replace=True)
+
+        db.commit()
+        return redirect(f"/shift/view/{shift_id}")
+
+    production = db.execute("""
+        SELECT * FROM shift_production
+        WHERE shift_id=?
+        ORDER BY id
+    """, (shift_id,)).fetchall()
+
+    setup = db.execute("""
+        SELECT * FROM shift_setup
+        WHERE shift_id=?
+        ORDER BY id
+    """, (shift_id,)).fetchall()
+
+    attendance = db.execute("""
+        SELECT * FROM shift_attendance
+        WHERE shift_id=?
+        ORDER BY id
+    """, (shift_id,)).fetchall()
+
+    downtime = db.execute("""
+        SELECT * FROM shift_downtime
+        WHERE shift_id=?
+        ORDER BY id
+    """, (shift_id,)).fetchall()
+
+    return render_template(
+        "shift/shift_entry.html",
+        **shift_form_context(
+            db,
+            mode="edit",
+            header=header,
+            production=production,
+            setup=setup,
+            attendance=attendance,
+            downtime=downtime
+        )
     )
 
 # ================= VIEW (SUPERVISOR) =================
